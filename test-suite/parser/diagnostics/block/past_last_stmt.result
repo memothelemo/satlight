@@ -1,0 +1,20 @@
+{
+  "ty": {
+    "Expected": {
+      "expected": "end of block",
+      "token": {
+        "ty": {
+          "Identifier": "hello"
+        },
+        "span": {
+          "start": 7,
+          "end": 12
+        }
+      }
+    }
+  },
+  "span": {
+    "start": 7,
+    "end": 12
+  }
+}

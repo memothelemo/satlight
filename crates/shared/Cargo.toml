@@ -1,0 +1,7 @@
+[package]
+name = "lunar_shared"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+lunar_span = { path = "../span" }

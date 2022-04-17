@@ -1,0 +1,20 @@
+{
+  "ty": {
+    "Expected": {
+      "expected": "(",
+      "token": {
+        "ty": {
+          "Symbol": "Dot"
+        },
+        "span": {
+          "start": 19,
+          "end": 20
+        }
+      }
+    }
+  },
+  "span": {
+    "start": 19,
+    "end": 20
+  }
+}

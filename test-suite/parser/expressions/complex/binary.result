@@ -1,0 +1,100 @@
+{
+  "Binary": {
+    "left": {
+      "Literal": {
+        "Name": {
+          "ty": {
+            "Identifier": "a"
+          },
+          "span": {
+            "start": 21,
+            "end": 22
+          }
+        }
+      }
+    },
+    "op": {
+      "kind": "Add",
+      "token": {
+        "ty": {
+          "Symbol": "Cross"
+        },
+        "span": {
+          "start": 23,
+          "end": 24
+        }
+      }
+    },
+    "right": {
+      "Binary": {
+        "left": {
+          "Binary": {
+            "left": {
+              "Literal": {
+                "Name": {
+                  "ty": {
+                    "Identifier": "b"
+                  },
+                  "span": {
+                    "start": 25,
+                    "end": 26
+                  }
+                }
+              }
+            },
+            "op": {
+              "kind": "Multiply",
+              "token": {
+                "ty": {
+                  "Symbol": "Asterisk"
+                },
+                "span": {
+                  "start": 27,
+                  "end": 28
+                }
+              }
+            },
+            "right": {
+              "Literal": {
+                "Name": {
+                  "ty": {
+                    "Identifier": "c"
+                  },
+                  "span": {
+                    "start": 29,
+                    "end": 30
+                  }
+                }
+              }
+            }
+          }
+        },
+        "op": {
+          "kind": "Subtract",
+          "token": {
+            "ty": {
+              "Symbol": "Dash"
+            },
+            "span": {
+              "start": 31,
+              "end": 32
+            }
+          }
+        },
+        "right": {
+          "Literal": {
+            "Name": {
+              "ty": {
+                "Identifier": "d"
+              },
+              "span": {
+                "start": 33,
+                "end": 34
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,80 @@
+{
+  "Literal": {
+    "Table": {
+      "span": {
+        "start": 0,
+        "end": 24
+      },
+      "fields": [
+        {
+          "Expr": {
+            "span": {
+              "start": 3,
+              "end": 8
+            },
+            "index": {
+              "Literal": {
+                "Name": {
+                  "ty": {
+                    "Identifier": "a"
+                  },
+                  "span": {
+                    "start": 3,
+                    "end": 4
+                  }
+                }
+              }
+            },
+            "value": {
+              "Literal": {
+                "Name": {
+                  "ty": {
+                    "Identifier": "b"
+                  },
+                  "span": {
+                    "start": 7,
+                    "end": 8
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "Expr": {
+            "span": {
+              "start": 11,
+              "end": 21
+            },
+            "index": {
+              "Literal": {
+                "Str": {
+                  "ty": {
+                    "Str": "b"
+                  },
+                  "span": {
+                    "start": 12,
+                    "end": 15
+                  }
+                }
+              }
+            },
+            "value": {
+              "Literal": {
+                "Number": {
+                  "ty": {
+                    "Number": "12"
+                  },
+                  "span": {
+                    "start": 19,
+                    "end": 21
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

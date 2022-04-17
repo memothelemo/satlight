@@ -1,0 +1,20 @@
+{
+  "ty": {
+    "Expected": {
+      "expected": ")",
+      "token": {
+        "ty": {
+          "Number": "3"
+        },
+        "span": {
+          "start": 14,
+          "end": 15
+        }
+      }
+    }
+  },
+  "span": {
+    "start": 14,
+    "end": 15
+  }
+}

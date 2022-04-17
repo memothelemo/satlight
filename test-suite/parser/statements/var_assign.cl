@@ -1,0 +1,1 @@
+(print)["hi"], yes, no.yes = true

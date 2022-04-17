@@ -1,0 +1,24 @@
+[package]
+name = "lunar_driver"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+lunar_ast = { path = "../ast" }
+lunar_parser = { path = "../parser" }
+lunar_shared = { path = "../shared" }
+lunar_span = { path = "../span" }
+lunar_tokenizer = { path = "../tokenizer" }
+
+[dev-dependencies]
+criterion = "0.3.5"
+
+[[bench]]
+name = "date"
+path = "../../benches/date.rs"
+harness = false
+
+[[bench]]
+name = "t"
+path = "../../benches/t.rs"
+harness = false

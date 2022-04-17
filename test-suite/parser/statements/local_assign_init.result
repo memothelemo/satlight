@@ -1,0 +1,99 @@
+{
+  "LocalAssign": {
+    "span": {
+      "start": 0,
+      "end": 29
+    },
+    "names": [
+      {
+        "span": {
+          "start": 6,
+          "end": 7
+        },
+        "name": {
+          "ty": {
+            "Identifier": "a"
+          },
+          "span": {
+            "start": 6,
+            "end": 7
+          }
+        },
+        "type": null
+      },
+      {
+        "span": {
+          "start": 9,
+          "end": 10
+        },
+        "name": {
+          "ty": {
+            "Identifier": "b"
+          },
+          "span": {
+            "start": 9,
+            "end": 10
+          }
+        },
+        "type": null
+      },
+      {
+        "span": {
+          "start": 12,
+          "end": 13
+        },
+        "name": {
+          "ty": {
+            "Identifier": "c"
+          },
+          "span": {
+            "start": 12,
+            "end": 13
+          }
+        },
+        "type": null
+      }
+    ],
+    "exprlist": [
+      {
+        "Literal": {
+          "Str": {
+            "ty": {
+              "Str": "a"
+            },
+            "span": {
+              "start": 16,
+              "end": 19
+            }
+          }
+        }
+      },
+      {
+        "Literal": {
+          "Str": {
+            "ty": {
+              "Str": "b"
+            },
+            "span": {
+              "start": 21,
+              "end": 24
+            }
+          }
+        }
+      },
+      {
+        "Literal": {
+          "Str": {
+            "ty": {
+              "Str": "c"
+            },
+            "span": {
+              "start": 26,
+              "end": 29
+            }
+          }
+        }
+      }
+    ]
+  }
+}

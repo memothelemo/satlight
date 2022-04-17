@@ -1,0 +1,134 @@
+{
+  "GenericFor": {
+    "span": {
+      "start": 0,
+      "end": 49
+    },
+    "names": [
+      {
+        "ty": {
+          "Identifier": "i"
+        },
+        "span": {
+          "start": 4,
+          "end": 5
+        }
+      },
+      {
+        "ty": {
+          "Identifier": "v"
+        },
+        "span": {
+          "start": 7,
+          "end": 8
+        }
+      }
+    ],
+    "exprlist": [
+      {
+        "Suffixed": {
+          "base": {
+            "Literal": {
+              "Name": {
+                "ty": {
+                  "Identifier": "pairs"
+                },
+                "span": {
+                  "start": 12,
+                  "end": 17
+                }
+              }
+            }
+          },
+          "suffix_span": {
+            "start": 17,
+            "end": 18
+          },
+          "suffix": {
+            "Call": {
+              "ExprList": [
+                {
+                  "Literal": {
+                    "Name": {
+                      "ty": {
+                        "Identifier": "collection"
+                      },
+                      "span": {
+                        "start": 18,
+                        "end": 28
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    ],
+    "block": {
+      "span": {
+        "start": 34,
+        "end": 49
+      },
+      "stmts": [
+        {
+          "Call": {
+            "Suffixed": {
+              "base": {
+                "Literal": {
+                  "Name": {
+                    "ty": {
+                      "Identifier": "print"
+                    },
+                    "span": {
+                      "start": 34,
+                      "end": 39
+                    }
+                  }
+                }
+              },
+              "suffix_span": {
+                "start": 39,
+                "end": 43
+              },
+              "suffix": {
+                "Call": {
+                  "ExprList": [
+                    {
+                      "Literal": {
+                        "Name": {
+                          "ty": {
+                            "Identifier": "i"
+                          },
+                          "span": {
+                            "start": 40,
+                            "end": 41
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "Literal": {
+                        "Name": {
+                          "ty": {
+                            "Identifier": "v"
+                          },
+                          "span": {
+                            "start": 43,
+                            "end": 44
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      ],
+      "last_stmt": null
+    }
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "Reference": {
+    "arguments": [
+      {
+        "Reference": {
+          "arguments": null,
+          "name": {
+            "ty": {
+              "Identifier": "string"
+            },
+            "span": {
+              "start": 12,
+              "end": 18
+            }
+          },
+          "span": {
+            "start": 12,
+            "end": 18
+          }
+        }
+      }
+    ],
+    "name": {
+      "ty": {
+        "Identifier": "NonNullable"
+      },
+      "span": {
+        "start": 0,
+        "end": 11
+      }
+    },
+    "span": {
+      "start": 0,
+      "end": 19
+    }
+  }
+}

@@ -1,0 +1,95 @@
+{
+  "NumericFor": {
+    "span": {
+      "start": 0,
+      "end": 29
+    },
+    "name": {
+      "ty": {
+        "Identifier": "i"
+      },
+      "span": {
+        "start": 4,
+        "end": 5
+      }
+    },
+    "start": {
+      "Literal": {
+        "Number": {
+          "ty": {
+            "Number": "1"
+          },
+          "span": {
+            "start": 8,
+            "end": 9
+          }
+        }
+      }
+    },
+    "end": {
+      "Literal": {
+        "Number": {
+          "ty": {
+            "Number": "5"
+          },
+          "span": {
+            "start": 11,
+            "end": 12
+          }
+        }
+      }
+    },
+    "step": null,
+    "block": {
+      "span": {
+        "start": 17,
+        "end": 29
+      },
+      "stmts": [
+        {
+          "Call": {
+            "Suffixed": {
+              "base": {
+                "Literal": {
+                  "Name": {
+                    "ty": {
+                      "Identifier": "print"
+                    },
+                    "span": {
+                      "start": 17,
+                      "end": 22
+                    }
+                  }
+                }
+              },
+              "suffix_span": {
+                "start": 22,
+                "end": 23
+              },
+              "suffix": {
+                "Call": {
+                  "ExprList": [
+                    {
+                      "Literal": {
+                        "Name": {
+                          "ty": {
+                            "Identifier": "i"
+                          },
+                          "span": {
+                            "start": 23,
+                            "end": 24
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      ],
+      "last_stmt": null
+    }
+  }
+}
