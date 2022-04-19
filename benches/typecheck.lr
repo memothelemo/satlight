@@ -6,3 +6,6 @@ local cool = 10
 
 -- declaring same variable in a statement
 local a, a = 1, 2
+
+-- leftover
+local a = 1, 2
