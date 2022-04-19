@@ -27,7 +27,7 @@ jobs:
       run: rustup default ${{ matrix.rust_version }}
 
     - name: Build
-      run: cargo build --bin lunar_driver --locked --verbose
+      run: cargo build --locked --verbose
 
     - name: Run tests
       run: |
