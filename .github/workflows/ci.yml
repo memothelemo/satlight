@@ -19,23 +19,32 @@ jobs:
         rust_version: [stable, "1.60.0"]
 
     steps:
-    - uses: actions/checkout@v1
-      with:
-        submodules: true
+      - uses: actions/checkout@v1
+        with:
+          submodules: true
 
-    - name: Setup Rust toolchain
-      run: rustup default ${{ matrix.rust_version }}
+      - name: Install rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: ${{ matrix.rust || 'stable' }}
+          profile: minimal
+          override: true
 
-    - name: Build
-      run: cargo build --locked --verbose
+      - name: Build debug
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: ${{ matrix.features }}
 
-    - name: Run tests
-      run: |
-        cargo test --locked --verbose
-        cargo run --bin test-suite --release --locked --verbose --features scripts
+      - name: Test
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: ${{ matrix.features }}
 
-    - name: Rustfmt and Clippy
-      run: |
-        cargo fmt -- --check
-        cargo clippy
-      if: matrix.rust_version == 'stable'
+      - name: Test all benches
+        if: matrix.benches
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: --benches ${{ matrix.features }}
