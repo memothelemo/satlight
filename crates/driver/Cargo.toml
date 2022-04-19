@@ -5,6 +5,7 @@ edition = "2021"
 
 [dependencies]
 lunar_ast = { path = "../ast" }
+lunar_typecheck = { path = "../typecheck" }
 lunar_parser = { path = "../parser" }
 lunar_shared = { path = "../shared" }
 lunar_span = { path = "../span" }
@@ -22,3 +23,9 @@ harness = false
 name = "t"
 path = "../../benches/t.rs"
 harness = false
+
+[[bench]]
+name = "typecheck"
+path = "../../benches/typecheck.rs"
+harness = false
+

@@ -88,10 +88,9 @@ pub fn hir_node(input: TokenStream) -> TokenStream {
 
             let generics = input.generics;
             let expanded = quote! {
-                impl #generics HirNode for #name #generics {
-                    fn span(&self) -> Span {
-                        use lunar_shared::Node;
-                        self.original.span()
+                impl #generics HirNode<'a> for #name #generics {
+                    fn original(&self) -> Id<&'a dyn Node> {
+                        self.original.clone()
                     }
                 }
             };

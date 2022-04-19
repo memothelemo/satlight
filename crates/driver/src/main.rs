@@ -25,6 +25,17 @@ fn main() {
         Err(err) => return print_error(&err),
     };
 
+    let mut typechecker = typecheck::Typechecker::new();
+    typechecker.preload_enviroment(&mut typecheck::LunarStandardProvider);
+
+    let hir_block = typechecker.visit_block(&block);
+    println!("{:#?}", hir_block);
+    println!("{:#?}", typechecker);
+
+    for diag in typechecker.diagnostics().iter() {
+        print_error(diag);
+    }
+
     // let mut hir_env = hir::HirEnvironment::new();
     // hir_env.load_file(&LunarStandard, "stdin".to_string(), &block);
 

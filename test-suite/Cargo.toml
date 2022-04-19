@@ -11,5 +11,6 @@ lunar_ast = { path = "../crates/ast", features = ["serde"] }
 lunar_errors = { path = "../crates/errors", features = ["serde"] }
 lunar_parser = { path = "../crates/parser" }
 lunar_tokenizer = { path = "../crates/tokenizer" }
+lunar_typecheck = { path = "../crates/typecheck", features = ["serde"] }
 serde = "1.0"
 serde_json = "1.0"

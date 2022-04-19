@@ -1,6 +1,7 @@
 use lunar_ast as ast;
 use lunar_parser as parser;
 use lunar_tokenizer as tokenizer;
+use lunar_typecheck as check;
 
 use std::{
     fs::{self, File},
@@ -129,6 +130,74 @@ create_parse_case! {
     dir_reader = run_ty_cases_dir,
 }
 
+fn typecheck_case(path: &Path, opposite: bool) {
+    use parser::Parser;
+    println!("Testing ({}): {}", match opposite {
+        true => "diag",
+        false => "ok"
+    }, path.to_string_lossy());
+
+    let file_contents = fs::read_to_string(path).unwrap();
+    let tokens = tokenizer::tokenize(&file_contents)
+        .unwrap_or_else(|e| panic!("Failed to tokenize {}: {:#?}", path.to_string_lossy(), e));
+
+    let tokens = ast::filter_non_trivia_tokens(tokens);
+
+    let state = parser::ParseState::new(&tokens);
+    let (_, result) = parser::ParseBlock
+        .parse(&state)
+        .unwrap_or_else(|e| panic!("Failed to parse {}: {:#?}", path.to_string_lossy(), e));
+
+    let mut typecheck = check::Typechecker::new();
+    typecheck.preload_enviroment(&mut check::LunarStandardProvider);
+    typecheck.visit_block(&result);
+
+    let output_path = Path::new(path).with_extension("result");
+    let output = serde_json::to_string_pretty(&typecheck.diagnostics()).unwrap();
+
+    File::create(output_path.clone())
+        .map(|mut v| v.write_all(output.as_bytes()))
+        .unwrap_or_else(|e| {
+            panic!(
+                "Failed to create output file {}: {}",
+                output_path.to_string_lossy(),
+                e
+            )
+        })
+        .unwrap();
+
+    // if it is in the opposite then, check for diagnostics!
+    if typecheck.diagnostics().is_empty() && opposite {
+        panic!("Expected errors in typechecking {}", path.to_string_lossy());
+    } else if !typecheck.diagnostics().is_empty() && !opposite {
+        panic!("Expected no errors in typechecking {}", path.to_string_lossy());
+    }
+}
+
+fn typecheck_case_dir(path: &Path, opposite: bool) {
+    let result = fs::read_dir(path)
+        .unwrap_or_else(|e| panic!("Failed to read directory {}: {}", path.to_string_lossy(), e));
+
+    for file in result {
+        let file_path = file.unwrap();
+        if file_path.file_type().unwrap().is_file() {
+            let file_ext = file_path.path();
+            let file_ext = file_ext.extension().unwrap();
+            if file_ext == "cl" {
+                let finalized_path = file_path.path();
+                let finalized_path = finalized_path.as_path();
+                if opposite {
+                    typecheck_case(finalized_path, true);
+                } else {
+                    typecheck_case(finalized_path, false);
+                }
+            }
+        } else {
+            typecheck_case_dir(file_path.path().as_path(), opposite);
+        }
+    }
+}
+
 fn main() {
     run_expr_cases_dir(
         Path::new("./test-suite/parser/diagnostics/expressions"),
@@ -144,4 +213,6 @@ fn main() {
     run_ty_cases_dir(Path::new("./test-suite/parser/types"), false);
     #[cfg(feature = "scripts")]
     run_block_cases_dir(Path::new("./test-suite/parser/scripts"), false);
+    typecheck_case_dir(Path::new("./test-suite/typechecking/pass"), false);
+    typecheck_case_dir(Path::new("./test-suite/typechecking/fail"), true);
 }

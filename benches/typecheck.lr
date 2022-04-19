@@ -1,0 +1,8 @@
+-- declaring variable
+local cool = 1200
+
+-- shadowing
+local cool = 10
+
+-- declaring same variable in a statement
+local a, a = 1, 2

@@ -118,6 +118,14 @@ impl TokenType {
             TokenType::Whitespace(_) => TokenKind::Whitespace,
         }
     }
+
+    pub fn as_name(&self) -> String {
+        if let TokenType::Identifier(name) = self {
+            name.to_string()
+        } else {
+            String::new()
+        }
+    }
 }
 
 impl Eq for TokenType {}
@@ -127,6 +135,12 @@ impl Eq for TokenType {}
 pub struct Token {
     ty: TokenType,
     span: Span,
+}
+
+impl lunar_shared::Node for Token {
+    fn span(&self) -> Span {
+        self.span
+    }
 }
 
 impl Token {
