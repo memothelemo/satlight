@@ -1,7 +1,7 @@
 mod prelude;
 use prelude::*;
 
-static CODE: &str = include_str!("sample.lr");
+static CODE: &str = include_str!("sample.lun");
 
 fn print_error(err: &dyn shared::AnyAstError) {
     if let Some(err) = err.as_with_span() {

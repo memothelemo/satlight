@@ -1,7 +1,7 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use lunar_tokenizer::tokenize as tokenizer;
 
-const T_SOURCE: &str = include_str!("./t.lr");
+const T_SOURCE: &str = include_str!("./t.lun");
 
 fn tokenize(criterion: &mut Criterion) {
     criterion.bench_function("tokenize t", |b| b.iter(|| tokenizer(black_box(T_SOURCE))));

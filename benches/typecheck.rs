@@ -1,7 +1,7 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use lunar_tokenizer::tokenize as tokenizer;
 
-const TC_SOURCE: &str = include_str!("./typecheck.lr");
+const TC_SOURCE: &str = include_str!("./typecheck.lun");
 
 fn check(criterion: &mut Criterion) {
     use lunar_parser::Parser;

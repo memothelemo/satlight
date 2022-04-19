@@ -9,6 +9,8 @@ use std::{
     path::Path,
 };
 
+const TARGET_FILE_EXT: &str = "lun";
+
 macro_rules! create_parse_case {
     {
         uses = $uses:expr,
@@ -85,7 +87,7 @@ macro_rules! create_parse_case {
                 if file_path.file_type().unwrap().is_file() {
                     let file_ext = file_path.path();
                     let file_ext = file_ext.extension().unwrap();
-                    if file_ext == "cl" {
+                    if file_ext == TARGET_FILE_EXT {
                         let finalized_path = file_path.path();
                         let finalized_path = finalized_path.as_path();
                         if opposite {
@@ -183,7 +185,7 @@ fn typecheck_case_dir(path: &Path, opposite: bool) {
         if file_path.file_type().unwrap().is_file() {
             let file_ext = file_path.path();
             let file_ext = file_ext.extension().unwrap();
-            if file_ext == "cl" {
+            if file_ext == TARGET_FILE_EXT {
                 let finalized_path = file_path.path();
                 let finalized_path = finalized_path.as_path();
                 if opposite {

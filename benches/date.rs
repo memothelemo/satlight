@@ -1,7 +1,7 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use lunar_tokenizer::tokenize as tokenizer;
 
-const DATE_SOURCE: &str = include_str!("./date.lr");
+const DATE_SOURCE: &str = include_str!("./date.lun");
 
 fn tokenize(criterion: &mut Criterion) {
     criterion.bench_function("tokenize date", |b| {
