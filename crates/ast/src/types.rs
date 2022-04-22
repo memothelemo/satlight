@@ -2,8 +2,23 @@
 use serde::{Deserialize, Serialize};
 
 use super::*;
-use lunar_macros::PropertyGetter;
 use crate::Node;
+use lunar_macros::PropertyGetter;
+
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, PartialEq, PropertyGetter)]
+pub struct TypeParameter {
+    span: Span,
+    name: Token,
+    typ: Option<TypeInfo>,
+    default: Option<TypeInfo>,
+}
+
+impl Node for TypeParameter {
+    fn span(&self) -> Span {
+        self.span
+    }
+}
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, Clone, PartialEq, PropertyGetter)]

@@ -119,6 +119,9 @@ pub enum Atom {
     #[token("true")]
     True,
 
+    #[token("type")]
+    Type,
+
     #[token("until")]
     Until,
 

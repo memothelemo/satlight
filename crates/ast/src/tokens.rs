@@ -43,6 +43,7 @@ symbols! {
         Return => "return",
         Then => "then",
         True => "true",
+        Type => "type",
         Until => "until",
         While => "while",
 
@@ -122,6 +123,8 @@ impl TokenType {
     pub fn as_name(&self) -> String {
         if let TokenType::Identifier(name) = self {
             name.to_string()
+        } else if let TokenType::Symbol(s) = self {
+            s.to_str()
         } else {
             String::new()
         }

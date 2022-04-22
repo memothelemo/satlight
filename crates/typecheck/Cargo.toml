@@ -1,0 +1,10 @@
+[package]
+name = "lunar_typecheck"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+lunar_ast = { path = "../ast" }
+lunar_macros = { path = "../macros" }
+lunar_shared = { path = "../shared" }
+id-arena = "*"

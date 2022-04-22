@@ -32,7 +32,7 @@ impl std::fmt::Display for RangeOutOfBounds {
         let s = &self.0;
         std::fmt::Display::fmt(
             &format!("attempt to convert from span ({} > {})", s.start(), s.end()),
-            f
+            f,
         )
     }
 }
@@ -47,4 +47,3 @@ pub fn get_text_ranged<'a>(template: &'a str, span: Span) -> Result<&'a str, Ran
         Ok(&template[span.start()..span.end()])
     }
 }
-

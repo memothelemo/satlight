@@ -1,4 +1,6 @@
 pub mod parser;
 pub mod tokenizer;
 
-pub use lunar_shared::{AnyAstError, AstError, AstErrorWithSpan, get_text_ranged, RangeOutOfBounds};
+pub use lunar_shared::{
+    get_text_ranged, AnyAstError, AstError, AstErrorWithSpan, RangeOutOfBounds,
+};

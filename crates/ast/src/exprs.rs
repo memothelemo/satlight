@@ -2,8 +2,8 @@
 use serde::{Deserialize, Serialize};
 
 use super::*;
-use lunar_macros::PropertyGetter;
 use crate::{Node, Span};
+use lunar_macros::PropertyGetter;
 
 mod op;
 pub use op::*;

@@ -25,6 +25,24 @@ fn main() {
         Err(err) => return print_error(&err),
     };
 
+    let mut checker = typecheck::Typechecker::new();
+    checker.bind_block(&block, None);
+
+    macro_rules! stop_if_diags {
+        () => {
+            for err in checker.diagnostics().iter() {
+                print_error(err);
+            }
+            if !checker.diagnostics().is_empty() {
+                return;
+            }
+        };
+    }
+
+    stop_if_diags!();
+    checker.check_all();
+    stop_if_diags!();
+
     // let mut typechecker = typecheck::Typechecker::new();
     // typechecker.preload_enviroment(&mut typecheck::LunarStandardProvider);
 
@@ -45,8 +63,4 @@ fn main() {
 
     // let mut typechecker = typechecker::Typechecker::new(ty_config, hir_env);
     // typechecker.check_all();
-
-    // for err in typechecker.errors.iter() {
-    //     print_error(err.borrow());
-    // }
 }

@@ -405,6 +405,27 @@ parser_struct!(ParseIfStmt, ast::IfStmt, |_, state: &ParseState<'a>| {
     ))
 });
 
+pub struct ParseTypeDeclaration;
+parser_struct!(ParseTypeDeclaration, ast::TypeDeclaration, |_, state: &ParseState<'a>| {
+    let (state, start_tok) = ParseSymbol(ast::SymbolType::Type).parse(state)?;
+    let start = start_tok.span().start();
+    let (state, name) = expect!(&state, ParseName, "<id>");
+    let (state, params) = if let Ok((new_state, params)) = no_match_ignore!(&state, ParseTypeParameters) {
+        (new_state, Some(params))
+    } else {
+        (state, None)
+    };
+    let (state, _) = expect!(&state, ParseSymbol(ast::SymbolType::Equal), "=");
+    let (state, typ) = expect!(&state, ParseTypeInfo, "<type>");
+    let end = typ.span().end();
+    Ok((state, ast::TypeDeclaration::new(
+        ast::Span::new(start, end),
+        name,
+        params,
+        typ,
+    )))
+});
+
 pub struct ParseStmt;
 parser_struct!(ParseStmt, ast::Stmt, |_, state: &ParseState<'a>| {
     parse_either!(state, {
@@ -419,6 +440,7 @@ parser_struct!(ParseStmt, ast::Stmt, |_, state: &ParseState<'a>| {
         ParseRepeatStmt => ast::Stmt::Repeat,
         ParseWhileStmt => ast::Stmt::While,
         ParseVarAssign => ast::Stmt::VarAssign,
+        ParseTypeDeclaration => ast::Stmt::TypeDeclaration,
     })
 });
 

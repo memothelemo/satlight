@@ -131,12 +131,17 @@ create_parse_case! {
     dir_reader = run_ty_cases_dir,
 }
 
+#[allow(unused)]
 fn typecheck_case(path: &Path, opposite: bool) {
     use parser::Parser;
-    println!("Testing ({}): {}", match opposite {
-        true => "diag",
-        false => "ok"
-    }, path.to_string_lossy());
+    println!(
+        "Testing ({}): {}",
+        match opposite {
+            true => "diag",
+            false => "ok",
+        },
+        path.to_string_lossy()
+    );
 
     let file_contents = fs::read_to_string(path).unwrap();
     let tokens = tokenizer::tokenize(&file_contents)
@@ -177,6 +182,7 @@ fn typecheck_case(path: &Path, opposite: bool) {
     // }
 }
 
+#[allow(unused)]
 fn typecheck_case_dir(path: &Path, opposite: bool) {
     let result = fs::read_dir(path)
         .unwrap_or_else(|e| panic!("Failed to read directory {}: {}", path.to_string_lossy(), e));
@@ -216,6 +222,6 @@ fn main() {
     run_ty_cases_dir(Path::new("./test-suite/parser/types"), false);
     #[cfg(feature = "scripts")]
     run_block_cases_dir(Path::new("./test-suite/parser/scripts"), false);
-    typecheck_case_dir(Path::new("./test-suite/typechecking/pass"), false);
-    typecheck_case_dir(Path::new("./test-suite/typechecking/fail"), true);
+    //typecheck_case_dir(Path::new("./test-suite/typechecking/pass"), false);
+    //typecheck_case_dir(Path::new("./test-suite/typechecking/fail"), true);
 }

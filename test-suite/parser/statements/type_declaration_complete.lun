@@ -1,0 +1,1 @@
+type HelloWorld<A, B: string, C: number = number> = A

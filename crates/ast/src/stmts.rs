@@ -2,8 +2,8 @@
 use serde::{Deserialize, Serialize};
 
 use super::*;
-use lunar_macros::PropertyGetter;
 use crate::Node;
+use lunar_macros::PropertyGetter;
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, Clone, PartialEq, PropertyGetter)]
@@ -33,6 +33,7 @@ pub enum Stmt {
     Return(ReturnStmt),
     Repeat(RepeatStmt),
     While(WhileStmt),
+    TypeDeclaration(TypeDeclaration),
     VarAssign(VarAssign),
 }
 
@@ -52,6 +53,7 @@ impl Node for Stmt {
             Stmt::Repeat(node) => node.span(),
             Stmt::While(node) => node.span(),
             Stmt::VarAssign(node) => node.span(),
+            Stmt::TypeDeclaration(node) => node.span(),
         }
     }
 }
@@ -201,6 +203,16 @@ pub struct LocalAssign {
     exprlist: ExprList,
 }
 
+impl LocalAssign {
+    pub fn into_segments(&self) -> Vec<(&LocalAssignName, Option<&Expr>)> {
+        let mut segments = Vec::new();
+        for (id, name) in self.names.iter().enumerate() {
+            segments.push((name, self.exprlist.get(id)));
+        }
+        segments
+    }
+}
+
 impl Node for LocalAssign {
     fn span(&self) -> Span {
         self.span
@@ -275,6 +287,21 @@ pub struct GenericFor {
 }
 
 impl Node for GenericFor {
+    fn span(&self) -> Span {
+        self.span
+    }
+}
+
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, PartialEq, PropertyGetter)]
+pub struct TypeDeclaration {
+    span: Span,
+    name: Token,
+    params: Option<Vec<TypeParameter>>,
+    typ: TypeInfo,
+}
+
+impl Node for TypeDeclaration {
     fn span(&self) -> Span {
         self.span
     }
