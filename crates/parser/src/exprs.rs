@@ -34,7 +34,10 @@ parser_struct!(
 pub struct ParseName;
 parser_struct!(ParseName, ast::Token, |_, state: &ParseState<'a>| {
     if let Some(token) = state.current() {
-        if matches!(token.ty(), ast::TokenType::Identifier(..) | ast::TokenType::Symbol(ast::SymbolType::Type)) {
+        if matches!(
+            token.ty(),
+            ast::TokenType::Identifier(..) | ast::TokenType::Symbol(ast::SymbolType::Type)
+        ) {
             return Ok((state.next(1), token.clone()));
         }
     }

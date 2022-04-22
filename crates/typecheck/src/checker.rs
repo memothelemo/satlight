@@ -1,18 +1,22 @@
+use lunar_config::CompilerOptions;
+
 use crate::*;
 
 #[derive(Debug)]
 pub struct Typechecker {
     binders: Vec<Binder>,
     diagnostics: Vec<Diagnostic>,
+    opt: CompilerOptions,
 }
 
 pub type CheckResult = Result<(), Diagnostic>;
 
 impl Typechecker {
     #[allow(clippy::new_without_default)]
-    pub fn new() -> Self {
+    pub fn new(opt: CompilerOptions) -> Self {
         Typechecker {
             binders: Vec::new(),
+            opt,
             diagnostics: Vec::new(),
         }
     }

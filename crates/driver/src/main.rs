@@ -25,7 +25,12 @@ fn main() {
         Err(err) => return print_error(&err),
     };
 
-    let mut checker = typecheck::Typechecker::new();
+    #[rustfmt::skip]
+    let mut checker = typecheck::Typechecker::new(
+        lunar_cfg::CompilerOptions {
+            multicore_typechecking: true,
+        },
+    );
     checker.bind_block(&block, None);
 
     macro_rules! stop_if_diags {
