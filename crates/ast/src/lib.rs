@@ -1,4 +1,3 @@
-extern crate lunar_span;
 extern crate smol_str;
 
 mod exprs;
@@ -15,8 +14,14 @@ pub use visitors::*;
 mod macros;
 mod tokens;
 
-pub use lunar_span::{Position, Span};
+mod span;
+pub use span::*;
+
 pub use tokens::*;
+
+pub trait Node {
+    fn span(&self) -> Span;
+}
 
 pub fn filter_non_trivia_tokens(mut tokens: Vec<Token>) -> Vec<Token> {
     tokens

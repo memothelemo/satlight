@@ -8,7 +8,5 @@ default = []
 
 [dependencies]
 lunar_macros = { path = "../macros" }
-lunar_span = { path = "../span", features = ["serde"] }
-lunar_shared = { path = "../shared" }
 smol_str = { version = "*", features = ["serde"] }
 serde = { version = "1.0", features = ["derive", "rc"], optional = true }

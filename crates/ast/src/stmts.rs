@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 
 use super::*;
 use lunar_macros::PropertyGetter;
-use lunar_shared::Node;
+use crate::Node;
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, Clone, PartialEq, PropertyGetter)]

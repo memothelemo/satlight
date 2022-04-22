@@ -2,7 +2,7 @@ use super::*;
 use crate::ast;
 
 use crate::{expect, no_match_ignore, optional, parse_either, parser_struct};
-use lunar_shared::Node;
+use lunar_ast::Node;
 
 pub struct ParseBreakStmt;
 parser_struct!(ParseBreakStmt, ast::Token, |_, state: &ParseState<'a>| {

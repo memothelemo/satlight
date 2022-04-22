@@ -23,7 +23,9 @@ pub struct ParseError {
     pub span: ast::Span,
 }
 
-use lunar_shared::{get_text_ranged, AnyAstError, AstErrorWithSpan, RangeOutOfBounds};
+use crate::{AnyAstError, AstErrorWithSpan};
+use lunar_shared::{get_text_ranged, RangeOutOfBounds};
+
 impl AstErrorWithSpan for ParseError {
     fn message(&self, code: &str) -> Result<String, RangeOutOfBounds> {
         Ok(match &self.ty {

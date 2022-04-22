@@ -31,7 +31,7 @@ pub struct TokenizeError {
     pub ty: TokenizeErrorType,
 }
 
-use lunar_shared::{AnyAstError, AstErrorWithSpan, RangeOutOfBounds};
+use crate::{AnyAstError, AstErrorWithSpan, RangeOutOfBounds};
 impl AstErrorWithSpan for TokenizeError {
     fn message(&self, _: &str) -> Result<String, RangeOutOfBounds> {
         Ok(self.ty.to_string())

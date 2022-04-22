@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 
 use super::*;
 use lunar_macros::PropertyGetter;
-use lunar_shared::{Node, Span};
+use crate::{Node, Span};
 
 mod op;
 pub use op::*;

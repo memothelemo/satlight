@@ -5,10 +5,8 @@ edition = "2021"
 
 [dependencies]
 lunar_ast = { path = "../ast" }
-lunar_typecheck = { path = "../typecheck" }
 lunar_parser = { path = "../parser" }
 lunar_shared = { path = "../shared" }
-lunar_span = { path = "../span" }
 lunar_tokenizer = { path = "../tokenizer" }
 
 [dev-dependencies]

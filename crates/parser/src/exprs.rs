@@ -1,7 +1,7 @@
 use super::*;
-use lunar_shared::Node;
 
 use crate::{expect, no_match_ignore, optional, parse_either, parser_struct};
+use lunar_ast::Node;
 
 pub struct ParseToken(pub ast::TokenType);
 parser_struct!(

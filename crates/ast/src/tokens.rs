@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::symbols;
 
-use lunar_span::Span;
+use crate::Span;
 use smol_str::SmolStr;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -137,7 +137,7 @@ pub struct Token {
     span: Span,
 }
 
-impl lunar_shared::Node for Token {
+impl crate::Node for Token {
     fn span(&self) -> Span {
         self.span
     }
