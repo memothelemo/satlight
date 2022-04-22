@@ -25,6 +25,10 @@ impl Typechecker {
         &self.diagnostics
     }
 
+    pub fn options(&self) -> &CompilerOptions {
+        &self.opt
+    }
+
     pub fn bind_block(
         &mut self,
         block: &lunar_ast::Block,

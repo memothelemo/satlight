@@ -1,5 +1,4 @@
-mod prelude;
-use prelude::*;
+use lunar::*;
 
 static CODE: &str = include_str!("sample.lun");
 
@@ -27,7 +26,7 @@ fn main() {
 
     #[rustfmt::skip]
     let mut checker = typecheck::Typechecker::new(
-        lunar_cfg::CompilerOptions {
+        config::CompilerOptions {
             multicore_typechecking: true,
         },
     );

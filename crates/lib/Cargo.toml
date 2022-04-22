@@ -1,0 +1,24 @@
+[package]
+name = "lunar"
+version = "0.1.0"
+edition = "2021"
+
+[features]
+full = ["lunar_ast", "lunar_config", "lunar_errors", "lunar_parser", "lunar_shared", "lunar_tokenizer", "lunar_typecheck"]
+
+ast = ["lunar_ast"]
+config = ["lunar_config"]
+errors = ["lunar_errors"]
+parser = ["lunar_parser"]
+shared = ["lunar_shared"]
+tokenizer = ["lunar_tokenizer"]
+typecheck = ["lunar_typecheck"]
+
+[dependencies]
+lunar_ast = { path = "../ast", optional = true }
+lunar_config = { path = "../config", optional = true }
+lunar_errors = { path = "../errors", optional = true }
+lunar_parser = { path = "../parser", optional = true }
+lunar_shared = { path = "../shared", optional = true }
+lunar_tokenizer = { path = "../tokenizer", optional = true }
+lunar_typecheck = { path = "../typecheck", optional = true }
