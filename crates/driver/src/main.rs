@@ -44,6 +44,7 @@ fn main() {
     }
 
     stop_if_diags!();
+    dbg!(&checker);
     checker.check_all();
     stop_if_diags!();
 

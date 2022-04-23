@@ -209,6 +209,9 @@ pub enum Atom {
     #[token("~=")]
     TildeEqual,
 
+    #[token("->")]
+    SkinnyArrow,
+
     #[regex("@metatable")]
     MetatableTag,
 

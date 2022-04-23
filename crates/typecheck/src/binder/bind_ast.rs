@@ -2,9 +2,11 @@ use super::*;
 use lunar_ast::Span;
 use lunar_macros::PropertyGetter;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum ExprKind {
     Assertion(Box<Expr>, Typ),
+    Call(Box<Expr>, Vec<Expr>),
+    Callback(Block, Typ),
     Error,
     Literal(Typ),
     Name(Typ),
@@ -17,7 +19,7 @@ impl ExprKind {
     }
 }
 
-#[derive(Debug, PropertyGetter)]
+#[derive(Debug, Clone, PropertyGetter)]
 pub struct Expr {
     pub(crate) kind: ExprKind,
     pub(crate) span: Span,
@@ -46,35 +48,27 @@ impl Expr {
     pub fn is_error(&self) -> bool {
         self.kind.is_err()
     }
-
-    pub fn typ(&self) -> Typ {
-        match self.kind {
-            ExprKind::Assertion(_, ty) => ty,
-            ExprKind::Error => {
-                unimplemented!("'Error' expression kind is not allowed, evaluate first.")
-            }
-            ExprKind::Literal(ty) => ty,
-            ExprKind::Name(ty) => ty,
-        }
-    }
 }
 
-#[derive(Debug, PropertyGetter)]
+pub type ExprListMemberSource = (Expr, Typ, usize);
+
+#[derive(Debug, Clone, PropertyGetter)]
 pub struct LocalAssignVar {
     pub(crate) name: String,
     pub(crate) name_span: Span,
     pub(crate) explicit_type: Option<Typ>,
-    pub(crate) expr: Option<Expr>,
+    pub(crate) expr: Option<ExprListMemberSource>,
 }
 
-#[derive(Debug, PropertyGetter)]
+#[derive(Debug, Clone, PropertyGetter)]
 pub struct LocalAssign {
     pub(crate) span: Span,
     pub(crate) variables: Vec<LocalAssignVar>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Stmt {
+    Call(Expr),
     Error(Span),
     LocalAssign(LocalAssign),
 }
@@ -89,20 +83,33 @@ impl Stmt {
         match self {
             Stmt::LocalAssign(node) => node.span,
             Stmt::Error(span) => *span,
+            Stmt::Call(node) => node.span(),
         }
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum LastStmt {
     Break,
     Error(Span),
+    Return(Vec<Expr>, Span),
 }
 
-#[derive(Debug, PropertyGetter)]
+impl LastStmt {
+    pub fn get_return_exprs(&self) -> Option<&Vec<Expr>> {
+        match self {
+            LastStmt::Return(t, ..) => Some(t),
+            _ => None,
+        }
+    }
+}
+
+#[derive(Debug, Clone, PropertyGetter)]
 pub struct Block {
+    pub(crate) expected_type: Option<Typ>,
     pub(crate) last_stmt: Option<LastStmt>,
     pub(crate) stmts: Vec<Stmt>,
+    pub(crate) scope: Id<Scope>,
     pub(crate) span: Span,
 }
 

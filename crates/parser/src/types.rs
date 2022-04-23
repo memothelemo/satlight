@@ -21,6 +21,7 @@ parser_struct!(
 pub struct ParseTypeInfo;
 parser_struct!(ParseTypeInfo, ast::TypeInfo, |_, state: &ParseState<'a>| {
     parse_either!(state, {
+        ParseTypeCallback => ast::TypeInfo::Callback,
         ParseTypeReference => ast::TypeInfo::Reference,
     })
 });
@@ -75,6 +76,58 @@ parser_struct!(
         .parse(&state)?;
         let (state, _) = expect!(&state, ParseSymbol(ast::SymbolType::GreaterThan), ">");
         Ok((state, params))
+    }
+);
+
+pub struct ParseTypeCallbackParameter;
+parser_struct!(
+    ParseTypeCallbackParameter,
+    ast::TypeCallbackParameter,
+    |_, state: &ParseState<'a>| {
+        // check <name> `:`
+        if let Ok((new_state, name)) = ParseName.parse(state) {
+            if let Ok((new_state, _)) = ParseSymbol(ast::SymbolType::Colon).parse(&new_state) {
+                let (new_state, type_info) = expect!(&new_state, ParseTypeInfo, "<type>");
+                return Ok((
+                    new_state,
+                    ast::TypeCallbackParameter::new(
+                        ast::Span::new(name.span().start(), type_info.span().end()),
+                        Some(name),
+                        type_info,
+                    ),
+                ));
+            }
+        }
+        let (state, type_info) = ParseTypeInfo.parse(state)?;
+        Ok((
+            state,
+            ast::TypeCallbackParameter::new(type_info.span(), None, type_info),
+        ))
+    }
+);
+
+pub struct ParseTypeCallback;
+parser_struct!(
+    ParseTypeCallback,
+    ast::TypeCallback,
+    |_, state: &ParseState<'a>| {
+        let (state, start_token) = ParseSymbol(ast::SymbolType::OpenParen).parse(state)?;
+        let (state, params) = ZeroOrMorePunctuated(
+            ParseTypeCallbackParameter,
+            ParseSymbol(ast::SymbolType::Comma),
+        )
+        .parse(&state)?;
+        let (state, _) = expect!(&state, ParseSymbol(ast::SymbolType::CloseParen), ")");
+        let (state, _) = ParseSymbol(ast::SymbolType::SkinnyArrow).parse(&state)?;
+        let (state, return_type) = expect!(&state, ParseTypeInfo, "<type>");
+        Ok((
+            state,
+            ast::TypeCallback::new(
+                ast::Span::new(start_token.span().start(), return_type.span().end()),
+                params,
+                Box::new(return_type),
+            ),
+        ))
     }
 );
 

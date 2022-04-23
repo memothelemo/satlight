@@ -222,6 +222,7 @@ pub struct FunctionBody {
     span: Span,
     params: ParamList,
     block: Block,
+    return_type: Option<TypeInfo>,
 }
 
 impl Node for FunctionBody {

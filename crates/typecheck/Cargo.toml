@@ -4,8 +4,9 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+either = "*"
+id-arena = "*"
 lunar_ast = { path = "../ast" }
 lunar_config = { path = "../config" }
 lunar_macros = { path = "../macros" }
 lunar_shared = { path = "../shared" }
-id-arena = "*"

@@ -48,10 +48,12 @@ pub trait ExprVisitor<'a> {
 pub trait TypeVisitor<'a> {
     type Output: 'a;
 
+    fn visit_type_callback(&mut self, node: &TypeCallback) -> Self::Output;
     fn visit_type_reference(&mut self, node: &TypeReference) -> Self::Output;
 
     fn visit_type_info(&mut self, node: &TypeInfo) -> Self::Output {
         match node {
+            TypeInfo::Callback(node) => self.visit_type_callback(node),
             TypeInfo::Reference(node) => self.visit_type_reference(node),
         }
     }

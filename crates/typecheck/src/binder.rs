@@ -6,7 +6,7 @@ pub use types::*;
 pub use visitor::*;
 
 use crate::{Diagnostic, LanguageBuiltin, LunarBuiltin, SymbolStorage};
-use id_arena::Id;
+use id_arena::{Arena, Id};
 use lunar_ast::AstVisitor;
 use lunar_macros::PropertyGetter;
 
@@ -24,23 +24,26 @@ pub struct Symbol {
 
 impl Symbol {
     pub fn as_variable(&self) -> Option<Typ> {
-        match self.typ {
-            SymbolTyp::Variable(ty) => Some(ty),
+        match &self.typ {
+            SymbolTyp::Variable(ty) => Some(ty.clone()),
             SymbolTyp::Type(..) => None,
         }
     }
 
     pub fn as_variable_type(&self) -> Option<Typ> {
-        match self.typ {
+        match &self.typ {
             SymbolTyp::Variable(..) => None,
-            SymbolTyp::Type(ty) => Some(ty),
+            SymbolTyp::Type(ty) => Some(ty.clone()),
         }
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct Scope {
     pub(crate) is_looping: bool,
+    pub(crate) expected_type: Option<Typ>,
+    pub(crate) real_type: Option<Typ>,
+    pub(crate) parent: Option<Id<Scope>>,
     symbols: Vec<Id<Symbol>>,
 }
 
@@ -51,6 +54,10 @@ pub enum VarDeclareResult {
 }
 
 impl VarDeclareResult {
+    pub fn occupied(&self) -> bool {
+        matches!(self, VarDeclareResult::Occupied(..))
+    }
+
     pub fn get_symbol_id(self) -> Id<Symbol> {
         match self {
             VarDeclareResult::Created(id) => id,
@@ -60,6 +67,28 @@ impl VarDeclareResult {
 }
 
 impl Scope {
+    // Typ has no 'Default' trait in it, clippy. :)
+    #[allow(clippy::new_without_default)]
+    pub fn new(parent: Option<Id<Scope>>, expected_type: Option<Typ>) -> Self {
+        Scope {
+            is_looping: false,
+            expected_type,
+            parent,
+            real_type: None,
+            symbols: Vec::new(),
+        }
+    }
+
+    pub fn empty() -> Self {
+        Scope {
+            is_looping: false,
+            expected_type: None,
+            parent: None,
+            real_type: None,
+            symbols: Vec::new(),
+        }
+    }
+
     pub fn lookup_var(
         &self,
         name: &str,
@@ -110,37 +139,56 @@ impl Scope {
     }
 }
 
-pub struct ScopeStack(Vec<Scope>);
-
-impl std::fmt::Debug for ScopeStack {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        self.0.fmt(f)
-    }
+#[derive(Debug)]
+pub struct ScopeStack {
+    pub binder: *mut Binder,
+    scopes: Vec<Id<Scope>>,
 }
 
 impl ScopeStack {
-    pub fn empty() -> Self {
-        ScopeStack(Vec::new())
+    pub fn empty(binder: *mut Binder) -> Self {
+        ScopeStack {
+            binder,
+            scopes: Vec::new(),
+        }
     }
 
-    pub fn new(base: Scope) -> Self {
-        ScopeStack(vec![base])
+    fn binder(&self) -> &Binder {
+        unsafe { self.binder.as_ref().expect("Pointer failed") }
+    }
+
+    fn binder_mut(&mut self) -> &mut Binder {
+        unsafe { self.binder.as_mut().expect("Pointer failed") }
     }
 
     pub fn push(&mut self, scope: Scope) {
-        self.0.push(scope);
+        let id = self.binder_mut().scopes.alloc(scope);
+        self.scopes.push(id);
     }
 
-    pub fn pop(&mut self) -> Option<Scope> {
-        self.0.pop()
+    pub fn pop(&mut self) -> Option<Id<Scope>> {
+        self.scopes.pop()
+    }
+
+    pub fn current_id(&self) -> Id<Scope> {
+        *self.scopes.last().unwrap()
     }
 
     pub fn current(&self) -> &Scope {
-        self.0.last().unwrap()
+        self.binder().scopes.get(self.current_id()).unwrap()
     }
 
     pub fn current_mut(&mut self) -> &mut Scope {
-        self.0.last_mut().unwrap()
+        let id = self.current_id();
+        self.binder_mut().scopes.get_mut(id).unwrap()
+    }
+
+    pub fn to_real_scopes(&self) -> Vec<&Scope> {
+        let mut scopes = Vec::new();
+        for scope_id in self.scopes.iter() {
+            scopes.push(self.binder().scopes.get(*scope_id).unwrap());
+        }
+        scopes
     }
 
     pub fn lookup_var(
@@ -148,7 +196,7 @@ impl ScopeStack {
         name: &str,
         storage: &mut SymbolStorage,
     ) -> Option<(Symbol, Id<Symbol>)> {
-        for scope in self.0.iter().rev() {
+        for scope in self.to_real_scopes().iter().rev() {
             if let Some(result) = scope.lookup_var(name, storage) {
                 return Some(result);
             }
@@ -161,7 +209,7 @@ impl ScopeStack {
         name: &str,
         storage: &mut SymbolStorage,
     ) -> Option<(Symbol, Id<Symbol>)> {
-        for scope in self.0.iter().rev() {
+        for scope in self.to_real_scopes().iter().rev() {
             if let Some(result) = scope.lookup_typ(name, storage) {
                 return Some(result);
             }
@@ -183,34 +231,33 @@ impl ScopeStack {
 pub struct Binder {
     pub(crate) block_result: Option<bind_ast::Block>,
     pub(crate) diagnostics: Vec<Diagnostic>,
+    pub(crate) scopes: Arena<Scope>,
     pub(crate) stack: ScopeStack,
     pub(crate) storage: SymbolStorage,
 }
 
 impl Binder {
+    pub fn get_real_scope(&self, scope_id: Id<Scope>) -> &Scope {
+        self.scopes.get(scope_id).unwrap()
+    }
+
     pub fn empty(builtin: Option<&mut dyn LanguageBuiltin>) -> Self {
         let mut binder = Binder {
             block_result: None,
             diagnostics: Vec::new(),
-            stack: ScopeStack::new(Scope::default()),
+            scopes: Arena::new(),
+            stack: ScopeStack::empty(std::ptr::null_mut()),
             storage: SymbolStorage::new(),
         };
+        binder.stack.binder = &mut binder;
+        binder.stack.push(Scope::empty());
         binder.init_builtin(builtin.unwrap_or(&mut LunarBuiltin));
         binder
     }
 
-    pub fn new(scope: Scope) -> Self {
-        Binder {
-            block_result: None,
-            diagnostics: Vec::new(),
-            stack: ScopeStack::new(scope),
-            storage: SymbolStorage::new(),
-        }
-    }
-
     pub fn from_block(builtin: Option<&mut dyn LanguageBuiltin>, block: &lunar_ast::Block) -> Self {
         let mut binder = Self::empty(builtin);
-        binder.block_result = Some(binder.visit_block(block));
+        binder.block_result = Some(binder.real_visit_block(block));
         binder
     }
 

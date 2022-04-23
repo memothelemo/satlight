@@ -51,6 +51,8 @@ symbols! {
         DoubleDot => "..",
         Dot => ".",
 
+        SkinnyArrow => "->",
+
         GreaterEqual => ">=",
         LessEqual => "<=",
         DoubleEqual => "==",

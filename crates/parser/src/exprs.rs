@@ -444,13 +444,26 @@ parser_struct!(
         }
 
         let (state, _) = expect!(&state, ParseSymbol(ast::SymbolType::CloseParen), ")");
+        let (state, return_type) =
+            if let Ok((new_state, _)) = ParseSymbol(ast::SymbolType::SkinnyArrow).parse(&state) {
+                let (new_state, obj) = expect!(&new_state, ParseTypeInfo, "<type>");
+                (new_state, Some(obj))
+            } else {
+                (state, None)
+            };
+
         let (state, block) = ParseBlock.parse(&state)?;
         let (state, end) = expect!(&state, ParseSymbol(ast::SymbolType::End), "end");
         let end_span = end.span().end();
 
         Ok((
             state,
-            ast::FunctionBody::new(ast::Span::new(start_span, end_span), params, block),
+            ast::FunctionBody::new(
+                ast::Span::new(start_span, end_span),
+                params,
+                block,
+                return_type,
+            ),
         ))
     }
 );
