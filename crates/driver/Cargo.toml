@@ -5,6 +5,7 @@ edition = "2021"
 
 [dependencies]
 lunar = { path = "../lib", features = ["full"] }
+rayon = "*"
 
 [dev-dependencies]
 criterion = "0.3.5"

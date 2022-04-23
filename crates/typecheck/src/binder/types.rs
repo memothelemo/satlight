@@ -48,7 +48,7 @@ pub(crate) fn from_vec_ref_exprs(exprs: &Vec<bind_ast::Expr>, symbols: &SymbolSt
     } else {
         let mut components = Vec::new();
         for expr in exprs {
-            components.push(to_expr_typ(&expr, symbols));
+            components.push(to_expr_typ(expr, symbols));
         }
         Typ::Tuple(components)
     }

@@ -1,71 +1,83 @@
+use std::{env, process, sync::Arc, fs};
 use lunar::*;
 
-static CODE: &str = include_str!("sample.lun");
-
-fn print_error(err: &dyn shared::AnyAstError) {
+fn print_error(file: &str, code: &str, err: &dyn shared::AnyAstError) {
     if let Some(err) = err.as_with_span() {
-        eprintln!("{}: {}", err.position(CODE), err.message(CODE).unwrap());
+        eprintln!("{}:{}: {}", file, err.position(code), err.message(code).unwrap());
     } else {
-        eprintln!("{}", err.as_normal().unwrap().message());
+        eprintln!("{}:{}", file, err.as_normal().unwrap().message());
     }
 }
 
-fn main() {
-    let tokens = match tokenizer::tokenize(CODE) {
-        Ok(tokens) => tokens,
-        Err(err) => return print_error(&err),
-    };
+fn parse(file_name: &str, contents: &str) -> Result<ast::Block, ()> {
     use parser::Parser;
-
+    let tokens = match tokenizer::tokenize(contents) {
+        Ok(tokens) => tokens,
+        Err(err) => return {
+            print_error(file_name, contents, &err);
+            Err(())
+        },
+    };
     let tokens = ast::filter_non_trivia_tokens(tokens);
     let state = parser::ParseState::new(&tokens);
     let (_, block) = match parser::ParseBlock.parse(&state) {
         Ok(block) => block,
-        Err(err) => return print_error(&err),
-    };
-
-    #[rustfmt::skip]
-    let mut checker = typecheck::Typechecker::new(
-        config::CompilerOptions {
-            multicore_typechecking: true,
+        Err(err) => return {
+            print_error(file_name, contents, &err);
+            Err(())
         },
-    );
-    checker.bind_block(&block, None);
+    };
+    Ok(block)
+}
 
-    macro_rules! stop_if_diags {
-        () => {
-            for err in checker.diagnostics().iter() {
-                print_error(err);
-            }
-            if !checker.diagnostics().is_empty() {
-                return;
-            }
-        };
+fn main() {
+    let mut args = env::args();
+    if args.len() < 2 {
+        eprintln!("No input files");
+        process::exit(1);
+    }
+    args.next();
+
+    let mut file_names = Vec::new();
+    for arg in args {
+        file_names.push(arg.to_string());
     }
 
-    stop_if_diags!();
-    dbg!(&checker);
-    checker.check_all();
-    stop_if_diags!();
+    let options = Arc::new(config::CompilerOptions {
+        multicore_typechecking: true
+    });
 
-    // let mut typechecker = typecheck::Typechecker::new();
-    // typechecker.preload_enviroment(&mut typecheck::LunarStandardProvider);
+    let file_names = Arc::new(file_names);
+    rayon::scope(move |s| {
+        for file_name in file_names.iter() {
+            let file_name = Arc::new(file_name.to_string());
+            let options = options.clone();
+            s.spawn(move |_| {
+                println!("Compiling: {}", &file_name);
 
-    // let hir_block = typechecker.visit_block(&block);
-    // println!("{:#?}", hir_block);
-    // println!("{:#?}", typechecker);
+                let contents = fs::read_to_string(file_name.as_ref()).unwrap();
+                let block = match parse(&file_name, &contents) {
+                    Ok(b) => b,
+                    Err(_) => return,
+                };
 
-    // for diag in typechecker.diagnostics().iter() {
-    //     print_error(diag);
-    // }
+                let mut checker = typecheck::Typechecker::new(options.as_ref().clone());
+                checker.bind_block(&block, None);
 
-    // let mut hir_env = hir::HirEnvironment::new();
-    // hir_env.load_file(&LunarStandard, "stdin".to_string(), &block);
-
-    // let ty_config = typechecker::TypecheckConfig {
-    //     enable_multi_threading: true,
-    // };
-
-    // let mut typechecker = typechecker::Typechecker::new(ty_config, hir_env);
-    // typechecker.check_all();
+                macro_rules! stop_if_diags {
+                    () => {
+                        for err in checker.diagnostics().iter() {
+                            print_error(&file_name, &contents, err);
+                        }
+                        if !checker.diagnostics().is_empty() {
+                            return;
+                        }
+                    };
+                }
+                stop_if_diags!();
+                checker.check_all();
+                stop_if_diags!();
+            });
+        }
+    });
 }
