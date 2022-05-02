@@ -1,0 +1,9 @@
+[package]
+name = "lunar_parser"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+lunar_ast = { path = "../ast" }
+lunar_common = { path = "../common" }
+lunar_traits = { path = "../traits" }

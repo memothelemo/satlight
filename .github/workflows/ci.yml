@@ -1,17 +1,18 @@
+# From: https://github.com/rojo-rbx/rojo/blob/master/.github/workflows/ci.yml
+# Licensed under MPL 2.0 License: https://github.com/rojo-rbx/rojo/blob/master/LICENSE.txt
 name: CI
 
 on:
   push:
     branches:
-    - master
+      - master
 
   pull_request:
     branches:
-    - master
+      - master
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     strategy:

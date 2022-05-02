@@ -1,9 +1,0 @@
-[package]
-name = "lunar_parser"
-version = "0.1.0"
-edition = "2021"
-
-[dependencies]
-lunar_ast = { path = "../ast" }
-lunar_errors = { path = "../errors" }
-lunar_shared = { path = "../shared" }

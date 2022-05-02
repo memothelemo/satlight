@@ -1,0 +1,15 @@
+[package]
+name = "lunar_ast"
+version = "0.1.0"
+edition = "2021"
+
+[features]
+default = []
+
+[dependencies]
+lunar_location = { path = "../location" }
+lunar_macros = { path = "../macros" }
+lunar_tokens = { path = "../tokens" }
+lunar_traits = { path = "../traits" }
+smol_str = { version = "*", features = ["serde"] }
+serde = { version = "1.0", features = ["derive", "rc"], optional = true }
