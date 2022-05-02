@@ -55,11 +55,9 @@ jobs:
 
       - name: Build
         run: cargo build --verbose --release
-        env:
-          OPENSSL_STATIC: 1
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v1
         with:
           name: lunar-linux
-          path: target/release/rojo
+          path: target/release/lunar
