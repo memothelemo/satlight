@@ -1,11 +1,8 @@
-driver:
-	cargo run --bin lunar_driver
+CARGO_MANIFESTS=./Cargo.toml $(wildcard ./lang/**/Cargo.toml)
+TEST_PROV=nextest run
+TEST_PROV_ARGS=--manifest-path
 
+# nextest doesn't test all of the crates natively
 test:
-	cargo run --bin test-suite
-
-test-release:
-	cargo run --bin test-suite --release
-
-test-full:
-	cargo run --bin test-suite --features scripts
+	echo Testing all crates
+	$(foreach file, $(CARGO_MANIFESTS), cargo $(TEST_PROV) $(TEST_PROV_ARGS) $(file);)

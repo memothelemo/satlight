@@ -1,0 +1,11 @@
+[package]
+name = "lunar_macros"
+version = "0.1.0"
+edition = "2018"
+
+[lib]
+proc_macro = true
+
+[dependencies]
+syn = { version = "1.0.57", features = ["full","fold"] }
+quote = "1.0.8"

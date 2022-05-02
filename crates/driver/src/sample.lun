@@ -1,4 +1,0 @@
-local that = function() -> string
-	return "hi"
-end
-local cool: string = that()

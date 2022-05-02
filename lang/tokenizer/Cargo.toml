@@ -1,0 +1,9 @@
+[package]
+name = "lunar_tokenizer"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+logos = "*"
+lunar_ast = { path = "../ast" }
+lunar_common = { path = "../common" }

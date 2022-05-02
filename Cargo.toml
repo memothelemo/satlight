@@ -1,2 +1,22 @@
 [workspace]
-members = ["crates/*", "test-suite"]
+members = ["lang/*"]
+
+[package]
+name = "lunar"
+version = "0.1.0"
+edition = "2018"
+
+[[bin]]
+name = "lunar"
+path = "src/cli/main.rs"
+
+[dependencies]
+anyhow = "*"
+chashmap = "*"
+id-arena = "*"
+lazy_static = "*"
+lunarscript = { path = "./lang/root", features = ["full"] }
+serde = { version = "1.0.0", features = ["derive", "rc"] }
+serde_json = "1.0.0"
+thiserror = "*"
+walkdir = "2"

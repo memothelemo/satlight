@@ -1,4 +1,3 @@
+/private
 /target
-
-*.result
-Cargo.lock
+/Cargo.lock

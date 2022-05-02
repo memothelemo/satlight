@@ -1,0 +1,12 @@
+[package]
+name = "lunar_checker"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+bitflags = "*"
+id-arena = "*"
+lunar_ast = { path = "../ast" }
+lunar_common = { path = "../common" }
+lunar_macros = { path = "../macros" }
+thiserror = "*"
