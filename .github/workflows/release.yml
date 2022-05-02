@@ -16,7 +16,7 @@ jobs:
           submodules: true
 
       - name: Build release binary
-        run: cargo build --verbose --locked --release
+        run: cargo build --verbose --release
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v1
@@ -38,9 +38,7 @@ jobs:
       - name: Build release binary
         run: |
           source $HOME/.cargo/env
-          cargo build --verbose --locked --release
-        env:
-          OPENSSL_STATIC: 1
+          cargo build --verbose --release
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v1
@@ -56,7 +54,7 @@ jobs:
           submodules: true
 
       - name: Build
-        run: cargo build --locked --verbose --release
+        run: cargo build --verbose --release
         env:
           OPENSSL_STATIC: 1
 
