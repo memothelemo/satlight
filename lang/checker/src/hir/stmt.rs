@@ -22,7 +22,7 @@ pub enum Stmt {
     TypeDeclaration(TypeDeclaration),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct TypeParameter {
     pub name: String,
     pub explicit: Option<Type>,

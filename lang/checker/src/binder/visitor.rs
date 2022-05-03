@@ -20,11 +20,20 @@ impl TypeVisitor<'_> for Binder {
         match symbol {
             Some(symbol_id) => {
                 let symbol = self.symbols.get(symbol_id).unwrap();
+                let arguments = if let Some(arguments) = node.arguments() {
+                    let mut list = Vec::new();
+                    for arg in arguments.iter() {
+                        list.push(self.visit_type_info(arg));
+                    }
+                    Some(list)
+                } else {
+                    None
+                };
                 Type::Ref(types::RefType {
                     span: node.span(),
                     name: real_name,
                     symbol: symbol_id,
-                    arguments: None,
+                    arguments,
                 })
             }
             None => {
@@ -188,6 +197,7 @@ impl StmtVisitor<'_> for Binder {
                 SymbolFlags::BlockVariable,
                 vec![name.span()],
                 expr.clone().or(Some(types::makers::any(name.span()))),
+                None,
             );
 
             let explicit_type = name.type_info().as_ref().map(|v| self.visit_type_info(v));
@@ -257,10 +267,13 @@ impl StmtVisitor<'_> for Binder {
             SymbolFlags::TypeAlias,
             Some(node.name().span()),
             types::makers::any(node.name().span()),
+            parameters.clone(),
         );
 
         self.push_scope(ScopeKind::TypeAliasValue);
 
+        // declare all of the parameters in an
+        // isolated type declaration scope
         if let Some(ref parameters) = parameters {
             for param in parameters.iter() {
                 // assume declare type variable?
@@ -273,6 +286,7 @@ impl StmtVisitor<'_> for Binder {
                         .clone()
                         .or(param.default.clone())
                         .unwrap_or(types::makers::any(param.name_span)),
+                    None,
                 );
             }
         }

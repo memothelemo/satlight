@@ -24,7 +24,7 @@ impl Validate for hir::LocalAssign {
                         variable
                             .expr_source
                             .unwrap_or(variable.explicit_type.as_ref().unwrap().span()),
-                    )?
+                    )?;
                 }
                 _ => {}
             }

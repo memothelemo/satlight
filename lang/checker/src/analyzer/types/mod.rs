@@ -6,16 +6,11 @@ impl Validate for types::Type {
     fn validate<'a>(&self, analyzer: &mut Analyzer<'a>) -> Result<Self::Output, AnalyzeError> {
         match self {
             Type::Ref(reference) => {
-                // TODO(memothelemo): check for type parameters in the base type :)
-                if let Some(args) = &reference.arguments {
-                    for arg in args.iter() {
-                        arg.validate(analyzer)?;
-                    }
-                }
-
                 // trying to get the symbol
                 let symbol = analyzer.binder.symbols.get(reference.symbol).unwrap();
                 if let Some(typ) = &symbol.typ {
+                    // VALIDATING TYPE ARGUMENTS
+                    analyzer.resolve_type(self, typ, self.span())?;
                     typ.validate(analyzer)?;
                     Ok(())
                 } else {
