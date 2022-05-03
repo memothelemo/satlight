@@ -13,4 +13,4 @@ lunar_location = { path = "../location" }
 lunar_tokens = { path = "../tokens" }
 serde = { version = "1.0.0", features = ["derive", "rc"] }
 serde_json = "1.0.0"
-thiserror = "*"
+thiserror = "1.0.31"
