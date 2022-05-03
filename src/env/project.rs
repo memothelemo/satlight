@@ -83,6 +83,8 @@ impl Project {
     /// Update the entire project with newest changes within the
     /// project root directory.
     pub fn reload(&mut self) -> Result<(), ProjectError> {
+        log::debug!("Reloading project {}", self.root().to_string_lossy());
+
         // gather all of the current source files
         let current_files = self.gather_source_file_paths()?;
         for file_path in current_files.iter() {

@@ -1,7 +1,13 @@
+use std::env;
+
 use anyhow::{anyhow, Context, Result};
+use log::SetLoggerError;
 use lunar::ast::Position;
 
-fn main() -> Result<()> {
+mod logger;
+
+fn compile() -> Result<()> {
+    log::info!("Initializing project");
     let now = std::time::Instant::now();
     let mut project = lunar::env::project::from_dir(".").with_context(|| {
         format!(
@@ -19,7 +25,7 @@ fn main() -> Result<()> {
         Ok(files) => files,
         Err(errors) => {
             let elapsed = now.elapsed();
-            println!("Took to initialize project: {:.2?}", elapsed);
+            log::info!("Took to initialize project: {:.2?}", elapsed);
 
             for err in errors.iter() {
                 eprintln!("{}", err);
@@ -30,16 +36,16 @@ fn main() -> Result<()> {
     };
 
     let elapsed = now.elapsed();
-    println!("Took to initialize project: {:.2?}", elapsed);
+    log::info!("Took to initialize project: {:.2?}", elapsed);
 
     for (file_path, file) in files.into_iter() {
         use lunar::checker::{analyzer, binder};
-        println!("Checking file: {}", file_path.to_string_lossy());
+        log::info!("Checking file: {}", file_path.to_string_lossy());
 
         let now = std::time::Instant::now();
         let (binder, block) = binder::Binder::new(&file);
         let elapsed = now.elapsed();
-        println!("Took to bind the source file: {:.2?}", elapsed);
+        log::debug!("Took to bind the source file: {:.2?}", elapsed);
 
         let now = std::time::Instant::now();
         analyzer::Analyzer::analyze(&binder, project.config(), &block).map_err(|err| {
@@ -54,8 +60,37 @@ fn main() -> Result<()> {
             ))
         })?;
         let elapsed = now.elapsed();
-        println!("Took to typecheck file: {:.2?}", elapsed);
+        log::debug!("Took to typecheck file: {:.2?}", elapsed);
     }
 
     Ok(())
+}
+
+fn init_logger() -> Result<(), SetLoggerError> {
+    log::set_logger(&logger::CLILogger)?;
+
+    let debugger_mode = {
+        let mut has_verbose = false;
+        for arg in env::args() {
+            if arg == "--verbose" {
+                has_verbose = true;
+                break;
+            }
+        }
+        has_verbose
+    };
+
+    log::set_max_level({
+        if cfg!(debug_assertions) || debugger_mode {
+            log::LevelFilter::Trace
+        } else {
+            log::LevelFilter::Warn
+        }
+    });
+    Ok(())
+}
+
+fn main() -> Result<()> {
+    init_logger().with_context(|| "Failed to initialize logger")?;
+    compile()
 }

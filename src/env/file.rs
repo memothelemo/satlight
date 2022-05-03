@@ -43,6 +43,8 @@ impl SourceFile {
 
     /// Attempts to reload contents of the SourceFile object
     pub fn reload(&mut self) -> Result<(), SourceFileReloadError> {
+        log::debug!("Reloading source file {}", self.path().to_string_lossy());
+
         use std::io::ErrorKind;
         let new_contents = std::fs::read_to_string(&self.path).map_err(|e| match e.kind() {
             ErrorKind::NotFound => SourceFileReloadError::NotFound,

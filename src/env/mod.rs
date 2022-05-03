@@ -38,7 +38,9 @@ pub fn parse_project(
 ) -> Result<CHashMap<PathBuf, lunarscript::ast::File>, Vec<ParseProjectError>> {
     let mut errors = Vec::new();
     let collection = CHashMap::new();
+
     for file in project.files() {
+        log::debug!("Compiling {}", file.path().to_string_lossy());
         let ast = match lunarscript::lazy_parse(file.contents()) {
             Ok(ast) => ast,
             Err(err) => {
