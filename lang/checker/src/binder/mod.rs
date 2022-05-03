@@ -20,7 +20,10 @@ pub struct Binder {
     pub symbols: Arena<Symbol>,
 }
 
-use crate::{hir, types::Type};
+use crate::{
+    hir::{self, TypeParameter},
+    types::Type,
+};
 use lunar_ast::{AstVisitor, Span};
 
 impl Binder {
@@ -44,7 +47,7 @@ impl Binder {
 			{as type = {
 				$( $name:expr => $typ:expr, )*
 			}} => {
-				$( self.declare_type_var($name, SymbolFlags::TypeAlias, None, $typ); )*
+				$( self.declare_type_var($name, SymbolFlags::TypeAlias, None, $typ, None); )*
 			};
 		}
 
@@ -74,12 +77,14 @@ impl Binder {
         flags: SymbolFlags,
         span: Vec<Span>,
         typ: Option<Type>,
+        parameters: Option<Vec<TypeParameter>>,
     ) -> Id<Symbol> {
         self.symbols.alloc(Symbol {
             definitions: span,
             flags,
             id: self.symbols.len(),
             typ,
+            parameters,
         })
     }
 }
@@ -113,8 +118,12 @@ impl Binder {
 
 impl Binder {
     pub fn declare_var(&mut self, name: &str, flags: SymbolFlags, span: Option<Span>, typ: Type) {
-        let symbol_id =
-            self.register_symbol(flags, span.map(|v| vec![v]).unwrap_or_default(), Some(typ));
+        let symbol_id = self.register_symbol(
+            flags,
+            span.map(|v| vec![v]).unwrap_or_default(),
+            Some(typ),
+            None,
+        );
         let scope = self.current_scope_mut();
         scope.vars.insert(name.to_string(), symbol_id);
     }
@@ -125,10 +134,16 @@ impl Binder {
         flags: SymbolFlags,
         span: Option<Span>,
         typ: Type,
-    ) {
-        let symbol_id =
-            self.register_symbol(flags, span.map(|v| vec![v]).unwrap_or_default(), Some(typ));
+        parameters: Option<Vec<TypeParameter>>,
+    ) -> Id<Symbol> {
+        let symbol_id = self.register_symbol(
+            flags,
+            span.map(|v| vec![v]).unwrap_or_default(),
+            Some(typ),
+            parameters,
+        );
         let scope = self.current_scope_mut();
         scope.types.insert(name.to_string(), symbol_id);
+        symbol_id
     }
 }

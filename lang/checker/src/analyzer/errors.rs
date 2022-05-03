@@ -10,12 +10,29 @@ pub enum AnalyzeError {
         span: Span,
     },
 
-    #[error("{left} is not extendable from {right}")]
+    #[error("{value} is not extendable from {assertion}")]
     NotExtendable {
-        left: String,
-        right: String,
+        value: String,
+        assertion: String,
         span: Span,
     },
+
+    #[error("{name} is an invalid type")]
+    InvalidType { name: String, span: Span },
+
+    #[error("{base} expected type arguments")]
+    NoArguments { span: Span, base: String },
+
+    #[error("Expected argument #{idx} in {base} as {expected_type}")]
+    MissingArgument {
+        span: Span,
+        idx: usize,
+        base: String,
+        expected_type: String,
+    },
+
+    #[error("{base} has no parameters")]
+    TypeHasNoParameters { span: Span, base: String },
 }
 
 impl AnalyzeError {
@@ -23,6 +40,10 @@ impl AnalyzeError {
         match self {
             AnalyzeError::NotDefined { span, .. } => *span,
             AnalyzeError::NotExtendable { span, .. } => *span,
+            AnalyzeError::InvalidType { span, .. } => *span,
+            AnalyzeError::MissingArgument { span, .. } => *span,
+            AnalyzeError::NoArguments { span, .. } => *span,
+            AnalyzeError::TypeHasNoParameters { span, .. } => *span,
         }
     }
 }

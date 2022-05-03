@@ -3,7 +3,7 @@
 use bitflags::bitflags;
 use lunar_ast::Span;
 
-use crate::types::Type;
+use crate::{hir::TypeParameter, types::Type};
 
 bitflags! {
     pub struct SymbolFlags: u32 {
@@ -13,6 +13,7 @@ bitflags! {
         const Function = 0b00000100;
 
         const TypeAlias = 0b00001000;
+        const TypeParameter = 0b00010000;
     }
 }
 
@@ -22,4 +23,5 @@ pub struct Symbol {
     pub flags: SymbolFlags,
     pub id: usize,
     pub typ: Option<Type>,
+    pub parameters: Option<Vec<TypeParameter>>,
 }

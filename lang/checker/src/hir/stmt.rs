@@ -19,6 +19,23 @@ pub struct Return {
 #[derive(Debug)]
 pub enum Stmt {
     LocalAssign(LocalAssign),
+    TypeDeclaration(TypeDeclaration),
+}
+
+#[derive(Debug, Clone)]
+pub struct TypeParameter {
+    pub name: String,
+    pub explicit: Option<Type>,
+    pub default: Option<Type>,
+    pub name_span: Span,
+    pub span: Span,
+}
+
+#[derive(Debug)]
+pub struct TypeDeclaration {
+    pub name: String,
+    pub parameters: Option<Vec<TypeParameter>>,
+    pub value: Type,
 }
 
 #[derive(Debug)]
