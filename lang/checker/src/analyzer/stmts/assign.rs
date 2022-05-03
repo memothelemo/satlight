@@ -1,10 +1,10 @@
 use super::*;
 
 #[allow(clippy::or_fun_call)]
-impl Validate for hir::LocalAssign {
+impl<'a> Validate<'a> for hir::LocalAssign<'a> {
     type Output = ();
 
-    fn validate<'a>(&self, analyzer: &mut Analyzer<'a>) -> Result<Self::Output, AnalyzeError> {
+    fn validate(&self, analyzer: &mut Analyzer<'a>) -> Result<Self::Output, AnalyzeError> {
         for variable in self.variables.iter() {
             match (variable.expr.as_ref(), variable.explicit_type.as_ref()) {
                 (None, Some(ty)) => {

@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 
 use super::*;
 use lunar_macros::{CtorCall, FieldCall};
-use lunar_traits::Node;
+use lunar_traits::SpannedNode;
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, Clone, PartialEq, FieldCall, CtorCall)]
@@ -15,7 +15,7 @@ pub struct TypeParameter {
     default: Option<TypeInfo>,
 }
 
-impl Node for TypeParameter {
+impl SpannedNode for TypeParameter {
     fn span(&self) -> Span {
         self.span
     }
@@ -30,7 +30,7 @@ pub struct TypeCallbackParameter {
     type_info: TypeInfo,
 }
 
-impl Node for TypeCallbackParameter {
+impl SpannedNode for TypeCallbackParameter {
     fn span(&self) -> Span {
         self.span
     }
@@ -46,7 +46,7 @@ pub struct TypeCallback {
     return_type: Box<TypeInfo>,
 }
 
-impl Node for TypeCallback {
+impl SpannedNode for TypeCallback {
     fn span(&self) -> Span {
         self.span
     }
@@ -61,7 +61,7 @@ pub struct TypeReference {
     name: Token,
 }
 
-impl Node for TypeReference {
+impl SpannedNode for TypeReference {
     fn span(&self) -> Span {
         self.span
     }
@@ -74,7 +74,7 @@ pub enum TypeInfo {
     Reference(TypeReference),
 }
 
-impl Node for TypeInfo {
+impl SpannedNode for TypeInfo {
     fn span(&self) -> Span {
         match self {
             TypeInfo::Callback(node) => node.span(),

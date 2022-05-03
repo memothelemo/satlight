@@ -8,10 +8,10 @@ pub use assign::*;
 pub use last::*;
 pub use typ::*;
 
-impl Validate for hir::Stmt {
+impl<'a> Validate<'a> for hir::Stmt<'a> {
     type Output = ();
 
-    fn validate<'a>(&self, analyzer: &mut Analyzer<'a>) -> Result<Self::Output, AnalyzeError> {
+    fn validate(&self, analyzer: &mut Analyzer<'a>) -> Result<Self::Output, AnalyzeError> {
         match self {
             hir::Stmt::LocalAssign(node) => node.validate(analyzer),
             hir::Stmt::TypeDeclaration(node) => node.validate(analyzer),

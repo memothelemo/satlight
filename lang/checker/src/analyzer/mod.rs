@@ -18,16 +18,16 @@ use lunar_ast::Span;
 pub use stmts::*;
 pub use types::*;
 
-pub trait Validate {
+pub trait Validate<'a> {
     type Output;
 
-    fn validate<'a>(&self, analyzer: &mut Analyzer<'a>) -> Result<Self::Output, AnalyzeError>;
+    fn validate(&self, analyzer: &mut Analyzer<'a>) -> Result<Self::Output, AnalyzeError>;
 }
 
-impl Validate for hir::Block {
+impl<'a> Validate<'a> for hir::Block<'a> {
     type Output = ();
 
-    fn validate<'a>(&self, analyzer: &mut Analyzer<'a>) -> Result<Self::Output, AnalyzeError> {
+    fn validate(&self, analyzer: &mut Analyzer<'a>) -> Result<Self::Output, AnalyzeError> {
         for stmt in self.stmts.iter() {
             stmt.validate(analyzer)?;
         }
@@ -38,7 +38,7 @@ impl Validate for hir::Block {
 
 #[derive(Debug)]
 pub struct Analyzer<'a> {
-    binder: &'a Binder,
+    binder: &'a Binder<'a>,
     config: &'a lunar_common::Config,
 
     /// contemporary storage for type parameters
@@ -49,14 +49,14 @@ impl<'a> Analyzer<'a> {
     pub fn analyze(
         binder: &'a Binder,
         config: &'a lunar_common::Config,
-        block: &hir::Block,
+        file: &'a hir::File,
     ) -> Result<(), AnalyzeError> {
         let mut analyzer = Analyzer {
             binder,
             config,
             type_vars: HashMap::default(),
         };
-        block.validate(&mut analyzer)?;
+        file.block.validate(&mut analyzer)?;
         Ok(())
     }
 }

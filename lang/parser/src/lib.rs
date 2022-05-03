@@ -8,7 +8,7 @@ mod stmts;
 mod types;
 
 pub use exprs::*;
-use lunar_traits::Node;
+use lunar_traits::SpannedNode;
 pub use others::*;
 pub use stmts::*;
 pub use types::*;

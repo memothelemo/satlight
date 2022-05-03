@@ -1,25 +1,26 @@
 use super::*;
 use crate::{binder::Symbol, types::Type};
 use id_arena::Id;
-use lunar_ast::Span;
+use lunar_ast::{Node, Span};
 
 #[derive(Debug)]
-pub enum LastStmt {
+pub enum LastStmt<'a> {
     None,
-    Return(Return),
-    Break(Span),
+    Return(Return<'a>),
+    Break(Span, Id<&'a dyn Node>),
 }
 
 #[derive(Debug)]
-pub struct Return {
-    pub exprs: Vec<Expr>,
+pub struct Return<'a> {
+    pub exprs: Vec<Expr<'a>>,
     pub span: Span,
+    pub node_id: Id<&'a dyn Node>,
 }
 
 #[derive(Debug)]
-pub enum Stmt {
-    LocalAssign(LocalAssign),
-    TypeDeclaration(TypeDeclaration),
+pub enum Stmt<'a> {
+    LocalAssign(LocalAssign<'a>),
+    TypeDeclaration(TypeDeclaration<'a>),
 }
 
 #[derive(Debug, Clone)]
@@ -32,10 +33,11 @@ pub struct TypeParameter {
 }
 
 #[derive(Debug)]
-pub struct TypeDeclaration {
+pub struct TypeDeclaration<'a> {
     pub name: String,
     pub parameters: Option<Vec<TypeParameter>>,
     pub value: Type,
+    pub node_id: Id<&'a dyn Node>,
 }
 
 #[derive(Debug)]
@@ -49,7 +51,8 @@ pub struct LocalAssignVar {
 }
 
 #[derive(Debug)]
-pub struct LocalAssign {
+pub struct LocalAssign<'a> {
     pub variables: Vec<LocalAssignVar>,
     pub span: Span,
+    pub node_id: Id<&'a dyn Node>,
 }

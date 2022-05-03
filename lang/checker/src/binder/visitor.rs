@@ -1,11 +1,15 @@
 use super::*;
 use crate::types::Type;
 use crate::{hir, types};
+use ast::AstVisitorWithLifetime;
 use lunar_ast as ast;
-use lunar_ast::{AstVisitor, ExprVisitor, LastStmtVisitor, Node, StmtVisitor, TypeVisitor};
+use lunar_ast::{
+    AstVisitor, ExprVisitorWithLifetime, LastStmtVisitorWithLifetime, SpannedNode,
+    StmtVisitorWithLifetime, TypeVisitor,
+};
 use std::borrow::Borrow;
 
-impl TypeVisitor<'_> for Binder {
+impl<'a> TypeVisitor<'_> for Binder<'a> {
     type Output = Type;
 
     fn visit_type_callback(&mut self, node: &lunar_ast::TypeCallback) -> Self::Output {
@@ -44,134 +48,156 @@ impl TypeVisitor<'_> for Binder {
     }
 }
 
-impl ExprVisitor<'_> for Binder {
-    type Output = hir::Expr;
+impl<'a> ExprVisitorWithLifetime<'a> for Binder<'a> {
+    type Output = hir::Expr<'a>;
 
-    fn visit_bool_expr(&mut self, node: &lunar_ast::Token) -> Self::Output {
-        hir::Expr::Literal(hir::Literal {
-            typ: types::makers::bool(node.span()),
-            span: node.span(),
-            symbol: None,
-        })
+    fn visit_bool_expr(&mut self, node: &'a lunar_ast::Token) -> Self::Output {
+        unimplemented!()
     }
 
-    fn visit_function_expr(&mut self, node: &lunar_ast::FunctionExpr) -> Self::Output {
+    fn visit_function_expr(&mut self, node: &'a lunar_ast::FunctionExpr) -> Self::Output {
         todo!()
     }
 
-    fn visit_name_expr(&mut self, node: &lunar_ast::Token) -> Self::Output {
-        let scope = self.current_scope();
-        let real_name = node.ty().as_name();
-
-        let symbol = scope.find_symbol_var(self, &real_name);
-        match symbol {
-            Some(symbol_id) => {
-                let symbol = self.symbols.get(symbol_id).unwrap();
-                hir::Expr::Literal(hir::Literal {
-                    // meh?
-                    typ: symbol.typ.clone().unwrap(),
-                    symbol: Some(symbol_id),
-                    span: node.span(),
-                })
-            }
-            None => {
-                println!("Unknown variable: {}", real_name);
-                hir::Expr::Literal(hir::Literal {
-                    typ: types::makers::any(node.span()),
-                    symbol: None,
-                    span: node.span(),
-                })
-            }
-        }
+    fn visit_name_expr(&mut self, node: &'a lunar_ast::Token) -> Self::Output {
+        unimplemented!()
     }
 
-    fn visit_number_expr(&mut self, node: &lunar_ast::Token) -> Self::Output {
-        hir::Expr::Literal(hir::Literal {
-            typ: types::makers::number(node.span()),
-            span: node.span(),
-            symbol: None,
-        })
+    fn visit_number_expr(&mut self, node: &'a lunar_ast::Token) -> Self::Output {
+        unimplemented!()
     }
 
-    fn visit_nil_expr(&mut self, node: &lunar_ast::Token) -> Self::Output {
-        hir::Expr::Literal(hir::Literal {
-            typ: types::makers::nil(node.span()),
-            span: node.span(),
-            symbol: None,
-        })
+    fn visit_nil_expr(&mut self, node: &'a lunar_ast::Token) -> Self::Output {
+        unimplemented!()
     }
 
-    fn visit_str_expr(&mut self, node: &lunar_ast::Token) -> Self::Output {
-        hir::Expr::Literal(hir::Literal {
-            typ: types::makers::string(node.span()),
-            span: node.span(),
-            symbol: None,
-        })
+    fn visit_str_expr(&mut self, node: &'a lunar_ast::Token) -> Self::Output {
+        unimplemented!()
     }
 
-    fn visit_table_ctor_expr(&mut self, node: &lunar_ast::TableCtor) -> Self::Output {
+    fn visit_table_ctor_expr(&mut self, node: &'a lunar_ast::TableCtor) -> Self::Output {
         todo!()
     }
 
-    fn visit_varargs_expr(&mut self, node: &lunar_ast::Token) -> Self::Output {
+    fn visit_varargs_expr(&mut self, node: &'a lunar_ast::Token) -> Self::Output {
         todo!()
     }
 
-    fn visit_binary_expr(&mut self, node: &lunar_ast::Binary) -> Self::Output {
+    fn visit_binary_expr(&mut self, node: &'a lunar_ast::Binary) -> Self::Output {
         todo!()
     }
 
-    fn visit_paren_expr(&mut self, node: &lunar_ast::Expr) -> Self::Output {
+    fn visit_paren_expr(&mut self, node: &'a lunar_ast::Expr) -> Self::Output {
         self.visit_expr(node)
     }
 
-    fn visit_suffixed_expr(&mut self, node: &lunar_ast::Suffixed) -> Self::Output {
+    fn visit_suffixed_expr(&mut self, node: &'a lunar_ast::Suffixed) -> Self::Output {
         todo!()
     }
 
-    fn visit_type_assertion_expr(&mut self, node: &lunar_ast::TypeAssertion) -> Self::Output {
+    fn visit_type_assertion_expr(&mut self, node: &'a lunar_ast::TypeAssertion) -> Self::Output {
         hir::Expr::TypeAssertion(hir::TypeAssertion {
             base: Box::new(self.visit_expr(node.base().borrow())),
             cast: self.visit_type_info(node.cast()),
             symbol: None,
             span: node.span(),
+            node_id: self.nodes.alloc(node),
         })
     }
 
-    fn visit_unary_expr(&mut self, node: &lunar_ast::Unary) -> Self::Output {
+    fn visit_unary_expr(&mut self, node: &'a lunar_ast::Unary) -> Self::Output {
         todo!()
     }
 
-    fn visit_suffix_kind_expr(&mut self, node: &lunar_ast::SuffixKind) -> Self::Output {
+    fn visit_suffix_kind_expr(&mut self, node: &'a lunar_ast::SuffixKind) -> Self::Output {
         todo!()
+    }
+
+    fn visit_literal_expr(&mut self, base: &'a ast::Literal) -> Self::Output {
+        match base {
+            ast::Literal::Bool(node) => hir::Expr::Literal(hir::Literal {
+                typ: types::makers::bool(node.span()),
+                span: node.span(),
+                symbol: None,
+                node_id: self.nodes.alloc(base),
+            }),
+            ast::Literal::Function(node) => self.visit_function_expr(node),
+            ast::Literal::Name(node) => {
+                let scope = self.current_scope();
+                let real_name = node.ty().as_name();
+
+                let symbol = scope.find_symbol_var(self, &real_name);
+                match symbol {
+                    Some(symbol_id) => {
+                        let symbol = self.symbols.get(symbol_id).unwrap();
+                        hir::Expr::Literal(hir::Literal {
+                            // meh?
+                            typ: symbol.typ.clone().unwrap(),
+                            symbol: Some(symbol_id),
+                            span: node.span(),
+                            node_id: self.nodes.alloc(base),
+                        })
+                    }
+                    None => {
+                        println!("Unknown variable: {}", real_name);
+                        hir::Expr::Literal(hir::Literal {
+                            typ: types::makers::any(node.span()),
+                            symbol: None,
+                            span: node.span(),
+                            node_id: self.nodes.alloc(base),
+                        })
+                    }
+                }
+            }
+            ast::Literal::Number(node) => hir::Expr::Literal(hir::Literal {
+                typ: types::makers::number(node.span()),
+                span: node.span(),
+                symbol: None,
+                node_id: self.nodes.alloc(base),
+            }),
+            ast::Literal::Nil(node) => hir::Expr::Literal(hir::Literal {
+                typ: types::makers::nil(node.span()),
+                span: node.span(),
+                symbol: None,
+                node_id: self.nodes.alloc(base),
+            }),
+            ast::Literal::Str(node) => hir::Expr::Literal(hir::Literal {
+                typ: types::makers::string(node.span()),
+                span: node.span(),
+                symbol: None,
+                node_id: self.nodes.alloc(base),
+            }),
+            ast::Literal::Table(node) => self.visit_table_ctor_expr(node),
+            ast::Literal::Varargs(node) => self.visit_varargs_expr(node),
+        }
     }
 }
 
-impl StmtVisitor<'_> for Binder {
-    type Output = hir::Stmt;
+impl<'a> StmtVisitorWithLifetime<'a> for Binder<'a> {
+    type Output = hir::Stmt<'a>;
 
-    fn visit_call_stmt(&mut self, node: &lunar_ast::Expr) -> Self::Output {
+    fn visit_call_stmt(&mut self, node: &'a lunar_ast::Expr) -> Self::Output {
         self.visit_expr(node);
         todo!()
     }
 
-    fn visit_do_stmt(&mut self, node: &lunar_ast::DoStmt) -> Self::Output {
+    fn visit_do_stmt(&mut self, node: &'a lunar_ast::DoStmt) -> Self::Output {
         todo!()
     }
 
-    fn visit_function_assign_stmt(&mut self, node: &lunar_ast::FunctionAssign) -> Self::Output {
+    fn visit_function_assign_stmt(&mut self, node: &'a lunar_ast::FunctionAssign) -> Self::Output {
         todo!()
     }
 
-    fn visit_generic_for_stmt(&mut self, node: &lunar_ast::GenericFor) -> Self::Output {
+    fn visit_generic_for_stmt(&mut self, node: &'a lunar_ast::GenericFor) -> Self::Output {
         todo!()
     }
 
-    fn visit_if_stmt(&mut self, node: &lunar_ast::IfStmt) -> Self::Output {
+    fn visit_if_stmt(&mut self, node: &'a lunar_ast::IfStmt) -> Self::Output {
         todo!()
     }
 
-    fn visit_local_assign_stmt(&mut self, node: &lunar_ast::LocalAssign) -> Self::Output {
+    fn visit_local_assign_stmt(&mut self, node: &'a lunar_ast::LocalAssign) -> Self::Output {
         let exprs = {
             let mut exprs = Vec::new();
             for expr in node.exprlist().iter() {
@@ -214,30 +240,34 @@ impl StmtVisitor<'_> for Binder {
         hir::Stmt::LocalAssign(hir::LocalAssign {
             variables,
             span: node.span(),
+            node_id: self.nodes.alloc(node),
         })
     }
 
-    fn visit_local_function_stmt(&mut self, node: &lunar_ast::LocalFunction) -> Self::Output {
+    fn visit_local_function_stmt(&mut self, node: &'a lunar_ast::LocalFunction) -> Self::Output {
         todo!()
     }
 
-    fn visit_numeric_for_stmt(&mut self, node: &lunar_ast::NumericFor) -> Self::Output {
+    fn visit_numeric_for_stmt(&mut self, node: &'a lunar_ast::NumericFor) -> Self::Output {
         todo!()
     }
 
-    fn visit_repeat_stmt(&mut self, node: &lunar_ast::RepeatStmt) -> Self::Output {
+    fn visit_repeat_stmt(&mut self, node: &'a lunar_ast::RepeatStmt) -> Self::Output {
         todo!()
     }
 
-    fn visit_while_stmt(&mut self, node: &lunar_ast::WhileStmt) -> Self::Output {
+    fn visit_while_stmt(&mut self, node: &'a lunar_ast::WhileStmt) -> Self::Output {
         todo!()
     }
 
-    fn visit_var_assign_stmt(&mut self, node: &lunar_ast::VarAssign) -> Self::Output {
+    fn visit_var_assign_stmt(&mut self, node: &'a lunar_ast::VarAssign) -> Self::Output {
         todo!()
     }
 
-    fn visit_type_declaration_stmt(&mut self, node: &lunar_ast::TypeDeclaration) -> Self::Output {
+    fn visit_type_declaration_stmt(
+        &mut self,
+        node: &'a lunar_ast::TypeDeclaration,
+    ) -> Self::Output {
         // get all the type parameters first...
         let parameters = if let Some(real_params) = node.params() {
             let mut params: Vec<hir::TypeParameter> = Vec::new();
@@ -301,13 +331,15 @@ impl StmtVisitor<'_> for Binder {
             name: real_name,
             parameters,
             value,
+            node_id: self.nodes.alloc(node),
         })
     }
 }
-impl AstVisitor<'_> for Binder {
-    type BlockOutput = hir::Block;
 
-    fn visit_block(&mut self, node: &lunar_ast::Block) -> Self::BlockOutput {
+impl<'a> AstVisitorWithLifetime<'a> for Binder<'a> {
+    type BlockOutput = hir::Block<'a>;
+
+    fn visit_block(&mut self, node: &'a lunar_ast::Block) -> Self::BlockOutput {
         let stmts = node
             .stmts()
             .iter()
@@ -328,9 +360,10 @@ impl AstVisitor<'_> for Binder {
                     hir::LastStmt::Return(hir::Return {
                         exprs,
                         span: node.span(),
+                        node_id: self.nodes.alloc(node),
                     })
                 }
-                ast::Stmt::Break(node) => hir::LastStmt::Break(node.span()),
+                c @ ast::Stmt::Break(n) => hir::LastStmt::Break(n.span(), self.nodes.alloc(c)),
                 _ => unreachable!(),
             })
             .unwrap_or(hir::LastStmt::None);

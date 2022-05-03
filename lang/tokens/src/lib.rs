@@ -143,7 +143,7 @@ pub struct Token {
     span: Span,
 }
 
-impl lunar_traits::Node for Token {
+impl lunar_traits::SpannedNode for Token {
     fn span(&self) -> Span {
         self.span
     }

@@ -1,14 +1,14 @@
 use crate::{binder::Symbol, types::Type};
 use id_arena::Id;
-use lunar_ast::Span;
+use lunar_ast::{Node, Span};
 
 #[derive(Debug)]
-pub enum Expr {
-    Literal(Literal),
-    TypeAssertion(TypeAssertion),
+pub enum Expr<'a> {
+    Literal(Literal<'a>),
+    TypeAssertion(TypeAssertion<'a>),
 }
 
-impl Expr {
+impl<'a> Expr<'a> {
     pub fn typ(&self) -> &Type {
         match self {
             Expr::Literal(node) => &node.typ,
@@ -32,16 +32,18 @@ impl Expr {
 }
 
 #[derive(Debug)]
-pub struct Literal {
+pub struct Literal<'a> {
     pub typ: Type,
     pub symbol: Option<Id<Symbol>>,
     pub span: Span,
+    pub node_id: Id<&'a dyn Node>,
 }
 
 #[derive(Debug)]
-pub struct TypeAssertion {
-    pub base: Box<Expr>,
+pub struct TypeAssertion<'a> {
+    pub base: Box<Expr<'a>>,
     pub cast: Type,
     pub symbol: Option<Id<Symbol>>,
     pub span: Span,
+    pub node_id: Id<&'a dyn Node>,
 }

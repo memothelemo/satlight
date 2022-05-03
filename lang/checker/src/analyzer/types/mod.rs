@@ -1,9 +1,9 @@
 use super::*;
 
-impl Validate for types::Type {
+impl<'a> Validate<'a> for types::Type {
     type Output = ();
 
-    fn validate<'a>(&self, analyzer: &mut Analyzer<'a>) -> Result<Self::Output, AnalyzeError> {
+    fn validate(&self, analyzer: &mut Analyzer<'a>) -> Result<Self::Output, AnalyzeError> {
         match self {
             Type::Ref(reference) => {
                 // trying to get the symbol

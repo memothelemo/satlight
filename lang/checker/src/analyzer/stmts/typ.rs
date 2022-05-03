@@ -1,9 +1,9 @@
 use super::*;
 
-impl Validate for hir::TypeDeclaration {
+impl<'a> Validate<'a> for hir::TypeDeclaration<'a> {
     type Output = ();
 
-    fn validate<'a>(&self, analyzer: &mut Analyzer<'a>) -> Result<Self::Output, AnalyzeError> {
+    fn validate(&self, analyzer: &mut Analyzer<'a>) -> Result<Self::Output, AnalyzeError> {
         // do we have to evaluate default value of a parameter?
         if let Some(ref parameters) = self.parameters {
             for param in parameters.iter() {

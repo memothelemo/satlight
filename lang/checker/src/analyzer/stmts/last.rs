@@ -1,9 +1,9 @@
 use super::*;
 
-impl Validate for hir::Return {
+impl<'a> Validate<'a> for hir::Return<'a> {
     type Output = ();
 
-    fn validate<'a>(&self, analyzer: &mut Analyzer<'a>) -> Result<Self::Output, AnalyzeError> {
+    fn validate(&self, analyzer: &mut Analyzer<'a>) -> Result<Self::Output, AnalyzeError> {
         for expr in self.exprs.iter() {
             expr.validate(analyzer)?;
         }
@@ -11,14 +11,14 @@ impl Validate for hir::Return {
     }
 }
 
-impl Validate for hir::LastStmt {
+impl<'a> Validate<'a> for hir::LastStmt<'a> {
     type Output = ();
 
-    fn validate<'a>(&self, analyzer: &mut Analyzer<'a>) -> Result<Self::Output, AnalyzeError> {
+    fn validate(&self, analyzer: &mut Analyzer<'a>) -> Result<Self::Output, AnalyzeError> {
         match self {
             hir::LastStmt::None => Ok(()),
             hir::LastStmt::Return(node) => node.validate(analyzer),
-            hir::LastStmt::Break(_) => Ok(()),
+            hir::LastStmt::Break(..) => Ok(()),
         }
     }
 }

@@ -13,30 +13,43 @@ pub use scope::*;
 pub use symbols::*;
 pub use visitor::*;
 
-#[derive(Debug)]
-pub struct Binder {
+pub struct Binder<'a> {
+    pub nodes: Arena<&'a dyn lunar_ast::Node>,
     pub scopes: Arena<Scope>,
     pub stack: Vec<Id<Scope>>,
     pub symbols: Arena<Symbol>,
+}
+
+impl<'a> std::fmt::Debug for Binder<'a> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Binder")
+            .field("scopes", &self.scopes)
+            .field("stack", &self.stack)
+            .field("symbols", &self.symbols)
+            .finish()
+    }
 }
 
 use crate::{
     hir::{self, TypeParameter},
     types::Type,
 };
-use lunar_ast::{AstVisitor, Span};
+use lunar_ast::{AstVisitorWithLifetime, Span};
 
-impl Binder {
+impl<'a> Binder<'a> {
     #[allow(clippy::new_without_default)]
-    pub fn new(block: &lunar_ast::File) -> (Self, hir::Block) {
-        let mut binder = Self {
+    pub fn new(block: &'a lunar_ast::File) -> (Binder<'a>, hir::File<'a>) {
+        let mut binder: Binder<'a> = Self {
+            nodes: Arena::new(),
             scopes: Arena::new(),
             stack: Vec::new(),
             symbols: Arena::new(),
         };
         binder.init_intrisnics();
 
-        let output = binder.visit_file(block);
+        let block = binder.visit_file(block);
+        let output = hir::File { block };
+
         (binder, output)
     }
 
@@ -65,7 +78,7 @@ impl Binder {
         }
     }
 
-    fn visit_file(&mut self, file: &lunar_ast::File) -> hir::Block {
+    fn visit_file(&mut self, file: &'a lunar_ast::File) -> hir::Block<'a> {
         self.push_scope(ScopeKind::Block);
         let block = self.visit_block(file.block());
         self.pop_scope();
@@ -89,7 +102,7 @@ impl Binder {
     }
 }
 
-impl Binder {
+impl<'a> Binder<'a> {
     pub fn push_scope(&mut self, kind: ScopeKind) {
         let scope = Scope::new(kind, self.stack.last().cloned());
         let scope_id = self.scopes.alloc(scope);
@@ -101,7 +114,7 @@ impl Binder {
     }
 }
 
-impl Binder {
+impl<'a> Binder<'a> {
     pub fn current_scope_id(&self) -> Id<Scope> {
         *self.stack.last().unwrap()
     }
@@ -116,7 +129,7 @@ impl Binder {
     }
 }
 
-impl Binder {
+impl<'a> Binder<'a> {
     pub fn declare_var(&mut self, name: &str, flags: SymbolFlags, span: Option<Span>, typ: Type) {
         let symbol_id = self.register_symbol(
             flags,

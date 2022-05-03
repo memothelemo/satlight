@@ -17,7 +17,7 @@ impl std::fmt::Display for TextSpanOutOfBounds {
 impl std::error::Error for TextSpanOutOfBounds {}
 
 #[allow(clippy::needless_lifetimes)]
-pub(super) fn get_token_ranged<'a>(
+pub fn get_token_ranged<'a>(
     template: &'a str,
     span: lunar_location::Span,
 ) -> Result<&str, TextSpanOutOfBounds> {

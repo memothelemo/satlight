@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 
 use super::*;
 use lunar_macros::{CtorCall, FieldCall};
-use lunar_traits::Node;
+use lunar_traits::SpannedNode;
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, Clone, PartialEq, FieldCall, CtorCall)]
@@ -14,6 +14,16 @@ pub struct ReturnStmt {
 }
 
 impl Node for ReturnStmt {
+    fn as_expr(&self) -> Option<Expr> {
+        None
+    }
+
+    fn as_stmt(&self) -> Option<Stmt> {
+        Some(Stmt::Return(self.clone()))
+    }
+}
+
+impl SpannedNode for ReturnStmt {
     fn span(&self) -> Span {
         self.span
     }
@@ -39,6 +49,31 @@ pub enum Stmt {
 }
 
 impl Node for Stmt {
+    fn as_expr(&self) -> Option<Expr> {
+        None
+    }
+
+    fn as_stmt(&self) -> Option<Stmt> {
+        match self {
+            Stmt::Break(node) => Some(Stmt::Break(node.clone())),
+            Stmt::Call(node) => node.as_stmt(),
+            Stmt::Do(node) => node.as_stmt(),
+            Stmt::FunctionAssign(node) => node.as_stmt(),
+            Stmt::GenericFor(node) => node.as_stmt(),
+            Stmt::If(node) => node.as_stmt(),
+            Stmt::LocalAssign(node) => node.as_stmt(),
+            Stmt::LocalFunction(node) => node.as_stmt(),
+            Stmt::NumericFor(node) => node.as_stmt(),
+            Stmt::Return(node) => node.as_stmt(),
+            Stmt::Repeat(node) => node.as_stmt(),
+            Stmt::While(node) => node.as_stmt(),
+            Stmt::TypeDeclaration(node) => node.as_stmt(),
+            Stmt::VarAssign(node) => node.as_stmt(),
+        }
+    }
+}
+
+impl SpannedNode for Stmt {
     fn span(&self) -> Span {
         match self {
             Stmt::Break(node) => node.span(),
@@ -68,7 +103,7 @@ pub struct ElseIfClause {
     block: Block,
 }
 
-impl Node for ElseIfClause {
+impl SpannedNode for ElseIfClause {
     fn span(&self) -> Span {
         self.span
     }
@@ -86,6 +121,16 @@ pub struct IfStmt {
 }
 
 impl Node for IfStmt {
+    fn as_expr(&self) -> Option<Expr> {
+        None
+    }
+
+    fn as_stmt(&self) -> Option<Stmt> {
+        Some(Stmt::If(self.clone()))
+    }
+}
+
+impl SpannedNode for IfStmt {
     fn span(&self) -> Span {
         self.span
     }
@@ -100,7 +145,7 @@ pub struct Block {
     last_stmt: Option<Box<Stmt>>,
 }
 
-impl Node for Block {
+impl SpannedNode for Block {
     fn span(&self) -> Span {
         self.span
     }
@@ -114,7 +159,7 @@ pub enum FunctionAssignName {
     Name(Token),
 }
 
-impl Node for FunctionAssignName {
+impl SpannedNode for FunctionAssignName {
     fn span(&self) -> Span {
         match self {
             FunctionAssignName::Name(a) => a.span(),
@@ -134,6 +179,16 @@ pub struct FunctionAssign {
 }
 
 impl Node for FunctionAssign {
+    fn as_expr(&self) -> Option<Expr> {
+        None
+    }
+
+    fn as_stmt(&self) -> Option<Stmt> {
+        Some(Stmt::FunctionAssign(self.clone()))
+    }
+}
+
+impl SpannedNode for FunctionAssign {
     fn span(&self) -> Span {
         self.span
     }
@@ -149,6 +204,16 @@ pub struct LocalFunction {
 }
 
 impl Node for LocalFunction {
+    fn as_expr(&self) -> Option<Expr> {
+        None
+    }
+
+    fn as_stmt(&self) -> Option<Stmt> {
+        Some(Stmt::LocalFunction(self.clone()))
+    }
+}
+
+impl SpannedNode for LocalFunction {
     fn span(&self) -> Span {
         self.span
     }
@@ -161,7 +226,7 @@ pub enum VarAssignName {
     Suffixed(Suffixed),
 }
 
-impl Node for VarAssignName {
+impl SpannedNode for VarAssignName {
     fn span(&self) -> Span {
         match self {
             VarAssignName::Name(node) => node.span(),
@@ -182,6 +247,16 @@ pub struct VarAssign {
 }
 
 impl Node for VarAssign {
+    fn as_expr(&self) -> Option<Expr> {
+        None
+    }
+
+    fn as_stmt(&self) -> Option<Stmt> {
+        Some(Stmt::VarAssign(self.clone()))
+    }
+}
+
+impl SpannedNode for VarAssign {
     fn span(&self) -> Span {
         self.span
     }
@@ -197,7 +272,7 @@ pub struct LocalAssignName {
     type_info: Option<TypeInfo>,
 }
 
-impl Node for LocalAssignName {
+impl SpannedNode for LocalAssignName {
     fn span(&self) -> Span {
         self.span
     }
@@ -223,6 +298,16 @@ impl LocalAssign {
 }
 
 impl Node for LocalAssign {
+    fn as_expr(&self) -> Option<Expr> {
+        None
+    }
+
+    fn as_stmt(&self) -> Option<Stmt> {
+        Some(Stmt::LocalAssign(self.clone()))
+    }
+}
+
+impl SpannedNode for LocalAssign {
     fn span(&self) -> Span {
         self.span
     }
@@ -237,6 +322,16 @@ pub struct DoStmt {
 }
 
 impl Node for DoStmt {
+    fn as_expr(&self) -> Option<Expr> {
+        None
+    }
+
+    fn as_stmt(&self) -> Option<Stmt> {
+        Some(Stmt::Do(self.clone()))
+    }
+}
+
+impl SpannedNode for DoStmt {
     fn span(&self) -> Span {
         self.span
     }
@@ -252,6 +347,16 @@ pub struct WhileStmt {
 }
 
 impl Node for WhileStmt {
+    fn as_expr(&self) -> Option<Expr> {
+        None
+    }
+
+    fn as_stmt(&self) -> Option<Stmt> {
+        Some(Stmt::While(self.clone()))
+    }
+}
+
+impl SpannedNode for WhileStmt {
     fn span(&self) -> Span {
         self.span
     }
@@ -267,6 +372,16 @@ pub struct RepeatStmt {
 }
 
 impl Node for RepeatStmt {
+    fn as_expr(&self) -> Option<Expr> {
+        None
+    }
+
+    fn as_stmt(&self) -> Option<Stmt> {
+        Some(Stmt::Repeat(self.clone()))
+    }
+}
+
+impl SpannedNode for RepeatStmt {
     fn span(&self) -> Span {
         self.span
     }
@@ -285,6 +400,16 @@ pub struct NumericFor {
 }
 
 impl Node for NumericFor {
+    fn as_expr(&self) -> Option<Expr> {
+        None
+    }
+
+    fn as_stmt(&self) -> Option<Stmt> {
+        Some(Stmt::NumericFor(self.clone()))
+    }
+}
+
+impl SpannedNode for NumericFor {
     fn span(&self) -> Span {
         self.span
     }
@@ -301,6 +426,16 @@ pub struct GenericFor {
 }
 
 impl Node for GenericFor {
+    fn as_expr(&self) -> Option<Expr> {
+        None
+    }
+
+    fn as_stmt(&self) -> Option<Stmt> {
+        Some(Stmt::GenericFor(self.clone()))
+    }
+}
+
+impl SpannedNode for GenericFor {
     fn span(&self) -> Span {
         self.span
     }
@@ -317,6 +452,16 @@ pub struct TypeDeclaration {
 }
 
 impl Node for TypeDeclaration {
+    fn as_expr(&self) -> Option<Expr> {
+        None
+    }
+
+    fn as_stmt(&self) -> Option<Stmt> {
+        Some(Stmt::TypeDeclaration(self.clone()))
+    }
+}
+
+impl SpannedNode for TypeDeclaration {
     fn span(&self) -> Span {
         self.span
     }

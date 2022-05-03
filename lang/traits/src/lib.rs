@@ -1,5 +1,5 @@
 use std::fmt::Debug;
 
-pub trait Node: Debug {
+pub trait SpannedNode: Debug {
     fn span(&self) -> lunar_location::Span;
 }

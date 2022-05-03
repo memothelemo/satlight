@@ -5,7 +5,7 @@ use super::*;
 
 use lunar_location::Span;
 use lunar_macros::{CtorCall, FieldCall};
-use lunar_traits::Node;
+use lunar_traits::SpannedNode;
 
 mod op;
 pub use op::*;
@@ -22,6 +22,23 @@ pub enum Expr {
 }
 
 impl Node for Expr {
+    fn as_expr(&self) -> Option<Expr> {
+        match self {
+            Expr::Binary(node) => node.as_expr(),
+            Expr::Literal(node) => node.as_expr(),
+            Expr::Paren(node) => node.as_expr(),
+            Expr::Suffixed(node) => node.as_expr(),
+            Expr::TypeAssertion(node) => node.as_expr(),
+            Expr::Unary(node) => node.as_expr(),
+        }
+    }
+
+    fn as_stmt(&self) -> Option<Stmt> {
+        None
+    }
+}
+
+impl SpannedNode for Expr {
     fn span(&self) -> Span {
         match self {
             Expr::Binary(node) => node.span(),
@@ -42,6 +59,16 @@ pub struct TypeAssertion {
 }
 
 impl Node for TypeAssertion {
+    fn as_expr(&self) -> Option<Expr> {
+        Some(Expr::TypeAssertion(self.clone()))
+    }
+
+    fn as_stmt(&self) -> Option<Stmt> {
+        None
+    }
+}
+
+impl SpannedNode for TypeAssertion {
     fn span(&self) -> Span {
         Span::merge(self.base.span(), self.cast.span())
     }
@@ -54,7 +81,7 @@ pub type ExprList = Vec<Expr>;
 ///
 /// This function will help, but it will return as `Span(0,0)` if
 /// the vector is empty.
-pub fn vector_span<N: Node>(vec: &[N]) -> Span {
+pub fn vector_span<N: SpannedNode>(vec: &[N]) -> Span {
     let first = vec.first().map(|v| v.span().start).unwrap_or(0);
     let last = vec.last().map(|v| v.span().start).unwrap_or(0);
     Span::new(first, last)
@@ -68,7 +95,7 @@ pub enum Args {
     Str(Token),
 }
 
-impl Node for Args {
+impl SpannedNode for Args {
     fn span(&self) -> Span {
         match self {
             Args::ExprList(node) => vector_span(node),
@@ -92,6 +119,16 @@ pub enum Literal {
 }
 
 impl Node for Literal {
+    fn as_expr(&self) -> Option<Expr> {
+        Some(Expr::Literal(self.clone()))
+    }
+
+    fn as_stmt(&self) -> Option<Stmt> {
+        None
+    }
+}
+
+impl SpannedNode for Literal {
     fn span(&self) -> Span {
         match self {
             Literal::Bool(node) => node.span(),
@@ -115,7 +152,7 @@ pub enum SuffixKind {
     Name(Token),
 }
 
-impl Node for SuffixKind {
+impl SpannedNode for SuffixKind {
     fn span(&self) -> Span {
         match self {
             SuffixKind::Call(node) => node.span(),
@@ -135,6 +172,16 @@ pub struct Suffixed {
 }
 
 impl Node for Suffixed {
+    fn as_expr(&self) -> Option<Expr> {
+        Some(Expr::Suffixed(self.clone()))
+    }
+
+    fn as_stmt(&self) -> Option<Stmt> {
+        None
+    }
+}
+
+impl SpannedNode for Suffixed {
     fn span(&self) -> Span {
         Span::merge(self.base.span(), self.suffix_span)
     }
@@ -151,7 +198,7 @@ pub enum TableField {
     },
 }
 
-impl Node for TableField {
+impl SpannedNode for TableField {
     fn span(&self) -> Span {
         match self {
             TableField::Array(exp) => exp.span(),
@@ -169,6 +216,16 @@ pub struct TableCtor {
 }
 
 impl Node for TableCtor {
+    fn as_expr(&self) -> Option<Expr> {
+        Some(Expr::Literal(Literal::Table(self.clone())))
+    }
+
+    fn as_stmt(&self) -> Option<Stmt> {
+        None
+    }
+}
+
+impl SpannedNode for TableCtor {
     fn span(&self) -> Span {
         self.span
     }
@@ -183,6 +240,16 @@ pub struct Binary {
 }
 
 impl Node for Binary {
+    fn as_expr(&self) -> Option<Expr> {
+        Some(Expr::Binary(self.clone()))
+    }
+
+    fn as_stmt(&self) -> Option<Stmt> {
+        None
+    }
+}
+
+impl SpannedNode for Binary {
     fn span(&self) -> Span {
         Span::merge(self.left.span(), self.right.span())
     }
@@ -196,6 +263,16 @@ pub struct Unary {
 }
 
 impl Node for Unary {
+    fn as_expr(&self) -> Option<Expr> {
+        Some(Expr::Unary(self.clone()))
+    }
+
+    fn as_stmt(&self) -> Option<Stmt> {
+        None
+    }
+}
+
+impl SpannedNode for Unary {
     fn span(&self) -> Span {
         Span::merge(self.op.token.span(), self.expr.span())
     }
@@ -208,7 +285,7 @@ pub enum Param {
     Varargs(Token),
 }
 
-impl Node for Param {
+impl SpannedNode for Param {
     fn span(&self) -> Span {
         match self {
             Param::Name(_) => todo!(),
@@ -229,7 +306,7 @@ pub struct FunctionBody {
     return_type: Option<TypeInfo>,
 }
 
-impl Node for FunctionBody {
+impl SpannedNode for FunctionBody {
     fn span(&self) -> Span {
         self.span
     }
@@ -244,6 +321,16 @@ pub struct FunctionExpr {
 }
 
 impl Node for FunctionExpr {
+    fn as_expr(&self) -> Option<Expr> {
+        Some(Expr::Literal(Literal::Function(self.clone())))
+    }
+
+    fn as_stmt(&self) -> Option<Stmt> {
+        None
+    }
+}
+
+impl SpannedNode for FunctionExpr {
     fn span(&self) -> Span {
         self.span
     }
