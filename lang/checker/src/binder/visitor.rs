@@ -228,7 +228,66 @@ impl StmtVisitor<'_> for Binder {
     }
 
     fn visit_type_declaration_stmt(&mut self, node: &lunar_ast::TypeDeclaration) -> Self::Output {
-        todo!()
+        // get all the type parameters first...
+        let parameters = if let Some(real_params) = node.params() {
+            let mut params: Vec<hir::TypeParameter> = Vec::new();
+            for param in real_params.iter() {
+                let real_name = param.name().ty().as_name();
+                let explicit_type = param.typ().as_ref().map(|v| self.visit_type_info(v));
+                let default_type = param.default().as_ref().map(|v| self.visit_type_info(v));
+
+                params.push(hir::TypeParameter {
+                    name: real_name,
+                    name_span: param.name().span(),
+                    explicit: explicit_type,
+                    default: default_type,
+                    span: param.span(),
+                });
+            }
+            Some(params)
+        } else {
+            None
+        };
+
+        // recursive types are allowed :)
+        // unless it has to be explicit...
+        let real_name = node.name().ty().as_name();
+        let symbol_id = self.declare_type_var(
+            &real_name,
+            SymbolFlags::TypeAlias,
+            Some(node.name().span()),
+            types::makers::any(node.name().span()),
+        );
+
+        self.push_scope(ScopeKind::TypeAliasValue);
+
+        if let Some(ref parameters) = parameters {
+            for param in parameters.iter() {
+                // assume declare type variable?
+                self.declare_type_var(
+                    &param.name,
+                    SymbolFlags::TypeParameter,
+                    Some(param.name_span),
+                    param
+                        .explicit
+                        .clone()
+                        .or(param.default.clone())
+                        .unwrap_or(types::makers::any(param.name_span)),
+                );
+            }
+        }
+
+        let value = self.visit_type_info(node.typ());
+        self.pop_scope();
+
+        let mut symbol = self.symbols.get_mut(symbol_id).unwrap();
+        symbol.typ = Some(value.clone());
+
+        hir::Stmt::TypeDeclaration(hir::TypeDeclaration {
+            name: real_name,
+            parameters,
+            value,
+        })
     }
 }
 impl AstVisitor<'_> for Binder {

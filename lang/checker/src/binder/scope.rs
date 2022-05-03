@@ -6,6 +6,7 @@ use std::collections::HashMap;
 pub enum ScopeKind {
     Block,
     Function,
+    TypeAliasValue,
 }
 
 #[derive(Debug)]

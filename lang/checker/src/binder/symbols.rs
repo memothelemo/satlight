@@ -13,6 +13,7 @@ bitflags! {
         const Function = 0b00000100;
 
         const TypeAlias = 0b00001000;
+        const TypeParameter = 0b00010000;
     }
 }
 

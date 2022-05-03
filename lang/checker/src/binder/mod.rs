@@ -125,10 +125,11 @@ impl Binder {
         flags: SymbolFlags,
         span: Option<Span>,
         typ: Type,
-    ) {
+    ) -> Id<Symbol> {
         let symbol_id =
             self.register_symbol(flags, span.map(|v| vec![v]).unwrap_or_default(), Some(typ));
         let scope = self.current_scope_mut();
         scope.types.insert(name.to_string(), symbol_id);
+        symbol_id
     }
 }
