@@ -16,6 +16,9 @@ pub enum AnalyzeError {
         right: String,
         span: Span,
     },
+
+    #[error("{name} is an invalid type")]
+    InvalidType { name: String, span: Span },
 }
 
 impl AnalyzeError {
@@ -23,6 +26,7 @@ impl AnalyzeError {
         match self {
             AnalyzeError::NotDefined { span, .. } => *span,
             AnalyzeError::NotExtendable { span, .. } => *span,
+            AnalyzeError::InvalidType { span, .. } => *span,
         }
     }
 }

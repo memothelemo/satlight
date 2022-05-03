@@ -15,7 +15,8 @@ impl Validate for hir::Literal {
     type Output = ();
 
     fn validate<'a>(&self, analyzer: &mut Analyzer<'a>) -> Result<Self::Output, AnalyzeError> {
-        todo!()
+        // TODO(memothelemo): Do something with other literal expressions
+        Ok(())
     }
 }
 
@@ -23,6 +24,8 @@ impl Validate for hir::TypeAssertion {
     type Output = ();
 
     fn validate<'a>(&self, analyzer: &mut Analyzer<'a>) -> Result<Self::Output, AnalyzeError> {
-        todo!()
+        self.base.validate(analyzer)?;
+        self.cast.validate(analyzer)?;
+        analyzer.resolve_type(self.base.typ(), &self.cast, self.span)
     }
 }

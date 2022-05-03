@@ -8,19 +8,24 @@ impl Validate for hir::LocalAssign {
         for variable in self.variables.iter() {
             match (variable.expr.as_ref(), variable.explicit_type.as_ref()) {
                 (None, Some(ty)) => {
+                    ty.validate(analyzer)?;
                     return Err(AnalyzeError::NotDefined {
                         variable: variable.name.to_string(),
                         explicit_type: analyzer.type_description(ty),
                         span: variable.name_span,
-                    })
+                    });
                 }
-                (Some(a), Some(b)) => analyzer.resolve_type(
-                    a,
-                    b,
-                    variable
-                        .expr_source
-                        .unwrap_or(variable.explicit_type.as_ref().unwrap().span()),
-                )?,
+                (Some(a), Some(b)) => {
+                    a.validate(analyzer)?;
+                    b.validate(analyzer)?;
+                    analyzer.resolve_type(
+                        a,
+                        b,
+                        variable
+                            .expr_source
+                            .unwrap_or(variable.explicit_type.as_ref().unwrap().span()),
+                    )?
+                }
                 _ => {}
             }
         }
