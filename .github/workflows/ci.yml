@@ -37,9 +37,6 @@ jobs:
           command: build
           args: ${{ matrix.features }}
 
-      - name: Install nextest
-        run: cargo install cargo-nextest
-
       - name: Test
         run: make test
 
