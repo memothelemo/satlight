@@ -202,7 +202,24 @@ impl<'a> Analyzer<'a> {
         let assert_des = self.type_description(assertion);
         let value = self.skip_downwards(value.clone());
         let assertion = self.skip_downwards(assertion.clone());
+        use ctypes::LiteralKind;
         match (&value, &assertion) {
+            (_, Type::Literal(l)) if matches!(l.kind, LiteralKind::Any | LiteralKind::Unknown) => {
+                Ok(())
+            }
+            (Type::Literal(l), _) if matches!(l.kind, LiteralKind::Any) => Ok(()),
+            (Type::Literal(a), Type::Literal(b))
+                if matches!(
+                    (&a.kind, &b.kind),
+                    (
+                        LiteralKind::Nil | LiteralKind::Void,
+                        LiteralKind::Void | LiteralKind::Nil
+                    )
+                ) =>
+            {
+                Ok(())
+            }
+
             (_, Type::Ref(_)) => {
                 let real_type = self.solve_type_ref(&assertion)?;
                 self.resolve_type(&value, &real_type, span)
@@ -211,6 +228,7 @@ impl<'a> Analyzer<'a> {
                 let real_type = self.solve_type_ref(&value)?;
                 self.resolve_type(&real_type, &assertion, span)
             }
+
             (_, Type::Tuple(tupl)) if tupl.members.len() == 1 => {
                 let member_type = tupl.members.get(0).unwrap();
                 self.resolve_type(&value, member_type, span)
@@ -219,6 +237,7 @@ impl<'a> Analyzer<'a> {
                 let member_type = tupl.members.get(0).unwrap();
                 self.resolve_type(member_type, &assertion, span)
             }
+
             _ if value == assertion => Ok(()),
             _ => Err(AnalyzeError::NotExtendable {
                 value: value_des,

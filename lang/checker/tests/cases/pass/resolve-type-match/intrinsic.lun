@@ -1,0 +1,9 @@
+-- any type testing
+local a: any = 1
+
+-- unknown type testing
+local b: unknown = 1
+
+-- void or nil type testing
+local c: void = nil
+local d = c

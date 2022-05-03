@@ -10,3 +10,7 @@ lunar_ast = { path = "../ast" }
 lunar_common = { path = "../common" }
 lunar_macros = { path = "../macros" }
 thiserror = "*"
+
+[dev-dependencies]
+lunar_parser = { path = "../parser" }
+lunar_tokenizer = { path = "../tokenizer" }

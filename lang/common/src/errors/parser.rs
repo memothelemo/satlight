@@ -1,6 +1,7 @@
-use super::*;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
+
+use super::*;
 
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]

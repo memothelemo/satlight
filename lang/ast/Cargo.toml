@@ -5,6 +5,7 @@ edition = "2021"
 
 [features]
 default = []
+serde = ["lunar_tokens/serde"]
 
 [dependencies]
 lunar_location = { path = "../location" }
@@ -12,4 +13,4 @@ lunar_macros = { path = "../macros" }
 lunar_tokens = { path = "../tokens" }
 lunar_traits = { path = "../traits" }
 smol_str = { version = "*", features = ["serde"] }
-serde = { version = "1.0", features = ["derive", "rc"], optional = true }
+serde = { version = "1.0.0", features = ["derive", "rc"] }

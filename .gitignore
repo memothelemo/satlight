@@ -1,3 +1,7 @@
 /private
 /target
 /Cargo.lock
+
+# Test suite
+/lang/checker/tests/cases/**/*.error
+*.result
