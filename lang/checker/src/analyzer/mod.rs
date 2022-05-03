@@ -92,6 +92,8 @@ impl<'a> Analyzer<'a> {
     }
 
     pub fn resolve_type(&self, left: &Type, right: &Type, span: Span) -> Result<(), AnalyzeError> {
+        let left_des = self.type_description(left);
+        let right_des = self.type_description(right);
         let left = self.skip_downwards(left.clone());
         let right = self.skip_downwards(right.clone());
         match (&left, &right) {
@@ -105,8 +107,8 @@ impl<'a> Analyzer<'a> {
             }
             _ if left == right => Ok(()),
             _ => Err(AnalyzeError::NotExtendable {
-                left: self.type_description(&left),
-                right: self.type_description(&right),
+                left: left_des,
+                right: right_des,
                 span,
             }),
         }
