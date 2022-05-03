@@ -45,18 +45,8 @@ fn test_fail_cases() {
         match result {
             Ok(_) => panic!("Expected fail"),
             Err(error) => {
-                let args = std::env::args();
-                let mut write_file = true;
-                for arg in args {
-                    if arg == "--no-write" {
-                        write_file = false;
-                        break;
-                    }
-                }
-                if write_file {
-                    let output_path = Path::new(path).with_extension("error");
-                    fs::write(output_path, error.to_string()).expect("failed to write");
-                }
+                let output_path = Path::new(path).with_extension("error");
+                fs::write(output_path, error.to_string()).expect("failed to write");
             }
         }
     });

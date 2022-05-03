@@ -35,28 +35,16 @@ macro_rules! create_parse_case {
             let output_path = Path::new(path).with_extension("result");
             let output = serde_json::to_string_pretty(&err).unwrap();
 
-			let args = std::env::args();
-			let mut write_file = true;
-
-			for arg in args {
-				if arg == "--no-write" {
-					write_file = false;
-					break;
-				}
-			}
-
-			if write_file {
-				File::create(output_path.clone())
-					.map(|mut v| v.write_all(output.as_bytes()))
-					.unwrap_or_else(|e| {
-						panic!(
-							"Failed to create output file {}: {}",
-							output_path.to_string_lossy(),
-							e
-						)
-					})
-					.unwrap();
-			}
+			File::create(output_path.clone())
+				.map(|mut v| v.write_all(output.as_bytes()))
+				.unwrap_or_else(|e| {
+					panic!(
+						"Failed to create output file {}: {}",
+						output_path.to_string_lossy(),
+						e
+					)
+				})
+				.unwrap();
         }
 
         fn $fn(path: &Path) {
@@ -77,26 +65,16 @@ macro_rules! create_parse_case {
             let output_path = Path::new(path).with_extension("result");
             let output = serde_json::to_string_pretty(&result).unwrap();
 
-			let args = std::env::args();
-			let mut write_file = true;
-			for arg in args {
-				if arg == "--no-write" {
-					write_file = false;
-					break;
-				}
-			}
-			if write_file {
-				File::create(output_path.clone())
-					.map(|mut v| v.write_all(output.as_bytes()))
-					.unwrap_or_else(|e| {
-						panic!(
-							"Failed to create output file {}: {}",
-							output_path.to_string_lossy(),
-							e
-						)
-					})
-					.unwrap();
-			}
+			File::create(output_path.clone())
+				.map(|mut v| v.write_all(output.as_bytes()))
+				.unwrap_or_else(|e| {
+					panic!(
+						"Failed to create output file {}: {}",
+						output_path.to_string_lossy(),
+						e
+					)
+				})
+				.unwrap();
         }
 
         fn $dir(path: &Path, opposite: bool) {

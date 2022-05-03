@@ -37,11 +37,11 @@ jobs:
           command: build
           args: ${{ matrix.features }}
 
+      - name: Install nextest
+        run: cargo install nextest
+
       - name: Test
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
-          args: ${{ matrix.features }}
+        run: make test
 
       - name: Test all benches
         if: matrix.benches
