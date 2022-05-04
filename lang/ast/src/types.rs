@@ -6,6 +6,36 @@ use lunar_macros::{CtorCall, FieldCall};
 use lunar_traits::SpannedNode;
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, PartialEq)]
+pub enum TypeTableField {
+    Computed {
+        span: Span,
+        key: Box<TypeInfo>,
+        value: TypeInfo,
+    },
+    Named {
+        span: Span,
+        name: Token,
+        value: TypeInfo,
+    },
+    Array(TypeInfo),
+}
+
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, PartialEq, FieldCall, CtorCall)]
+pub struct TypeTable {
+    #[exclude]
+    span: Span,
+    fields: Vec<TypeTableField>,
+}
+
+impl SpannedNode for TypeTable {
+    fn span(&self) -> Span {
+        self.span
+    }
+}
+
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, Clone, PartialEq, FieldCall, CtorCall)]
 pub struct TypeParameter {
     #[exclude]
@@ -72,6 +102,7 @@ impl SpannedNode for TypeReference {
 pub enum TypeInfo {
     Callback(TypeCallback),
     Reference(TypeReference),
+    Table(TypeTable),
 }
 
 impl SpannedNode for TypeInfo {
@@ -79,6 +110,7 @@ impl SpannedNode for TypeInfo {
         match self {
             TypeInfo::Callback(node) => node.span(),
             TypeInfo::Reference(node) => node.span(),
+            TypeInfo::Table(node) => node.span(),
         }
     }
 }

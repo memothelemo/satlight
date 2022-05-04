@@ -191,6 +191,11 @@ impl SpannedNode for Suffixed {
 #[derive(Debug, Clone, PartialEq)]
 pub enum TableField {
     Array(Box<Expr>),
+    Named {
+        span: Span,
+        name: Token,
+        value: Box<Expr>,
+    },
     Expr {
         span: Span,
         index: Box<Expr>,
@@ -203,6 +208,7 @@ impl SpannedNode for TableField {
         match self {
             TableField::Array(exp) => exp.span(),
             TableField::Expr { span, .. } => *span,
+            TableField::Named { span, .. } => *span,
         }
     }
 }

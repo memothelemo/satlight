@@ -1,7 +1,7 @@
+use crate::binder::Symbol;
 use id_arena::Id;
 use lunar_ast::Span;
-
-use crate::binder::Symbol;
+use lunar_common::dictionary::Dictionary;
 
 pub mod makers;
 pub mod utils;
@@ -11,6 +11,7 @@ pub enum Type {
     Literal(LiteralType),
     Ref(RefType),
     Tuple(TupleType),
+    Table(Table),
 }
 
 impl Type {
@@ -19,6 +20,7 @@ impl Type {
             Type::Literal(node) => node.span,
             Type::Ref(node) => node.span,
             Type::Tuple(node) => node.span,
+            Type::Table(node) => node.span,
         }
     }
 
@@ -38,6 +40,41 @@ impl Type {
         let mut types = Vec::new();
         self.deref_tuples_inner(&mut types);
         types
+    }
+}
+
+#[derive(Debug, PartialEq, Clone, Hash)]
+pub enum TableFieldKey {
+    ///   |----|
+    /// { Hello = "World" }
+    Name(String, Span),
+
+    ///   |------|
+    /// { [string] = 10 }
+    Computed(Type),
+
+    /// Array like member
+    None,
+}
+
+#[derive(Debug, Clone)]
+pub struct Table {
+    pub span: Span,
+    pub entries: Dictionary<TableFieldKey, Type>,
+    pub metatable: Option<Box<Table>>,
+}
+
+impl PartialEq for Table {
+    fn eq(&self, other: &Self) -> bool {
+        // kind of dangerous way to do?
+        self.span == other.span
+    }
+}
+
+impl std::hash::Hash for Table {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.entries.hash(state);
+        self.metatable.hash(state);
     }
 }
 

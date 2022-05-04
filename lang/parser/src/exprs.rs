@@ -95,9 +95,9 @@ parser_struct!(ParseTableField, ast::TableField, |_, state: &ParseState<'a>| {
             let (ns, value) = expect!(&ns, ParseExpr, "<exp>");
             return Ok((
                 ns,
-                ast::TableField::Expr {
+                ast::TableField::Named {
                     span: ast::Span::new(start_span, value.span().end),
-                    index: Box::new(ast::Expr::Literal(ast::Literal::Name(index))),
+                    name: index,
                     value: Box::new(value),
                 },
             ));

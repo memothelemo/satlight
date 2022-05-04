@@ -82,6 +82,7 @@ impl<'a> Analyzer<'a> {
                 ctypes::LiteralKind::Void => "void",
             }
             .to_string(),
+            Type::Table(_) => todo!(),
             //Type::Alias(node) => node.name.to_string(),
         }
     }
@@ -127,6 +128,7 @@ impl<'a> Analyzer<'a> {
                     members: solved_members,
                 }))
             }
+            Type::Table(_) => todo!(),
         }
     }
 

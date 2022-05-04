@@ -1,5 +1,8 @@
 use super::*;
 
+mod table;
+pub use table::*;
+
 impl<'a> Validate<'a> for hir::Expr<'a> {
     type Output = ();
 
@@ -7,6 +10,7 @@ impl<'a> Validate<'a> for hir::Expr<'a> {
         match self {
             hir::Expr::Literal(node) => node.validate(analyzer),
             hir::Expr::TypeAssertion(node) => node.validate(analyzer),
+            hir::Expr::Table(node) => node.validate(analyzer),
         }
     }
 }

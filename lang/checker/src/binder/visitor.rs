@@ -7,6 +7,7 @@ use lunar_ast::{
     AstVisitor, ExprVisitorWithLifetime, LastStmtVisitorWithLifetime, SpannedNode,
     StmtVisitorWithLifetime, TypeVisitor,
 };
+use lunar_common::dictionary::Dictionary;
 use std::borrow::Borrow;
 
 impl<'a> TypeVisitor<'_> for Binder<'a> {
@@ -46,6 +47,10 @@ impl<'a> TypeVisitor<'_> for Binder<'a> {
             }
         }
     }
+
+    fn visit_type_table(&mut self, node: &ast::TypeTable) -> Self::Output {
+        todo!()
+    }
 }
 
 impl<'a> ExprVisitorWithLifetime<'a> for Binder<'a> {
@@ -76,7 +81,50 @@ impl<'a> ExprVisitorWithLifetime<'a> for Binder<'a> {
     }
 
     fn visit_table_ctor_expr(&mut self, node: &'a lunar_ast::TableCtor) -> Self::Output {
-        todo!()
+        let mut fields = Vec::new();
+        let mut entries = Dictionary::new();
+        for field in node.fields().iter() {
+            let field = match field {
+                ast::TableField::Array(expr) => {
+                    let expr = self.visit_expr(expr);
+                    entries.insert(types::TableFieldKey::None, expr.typ().clone());
+                    (hir::TableFieldKey::None, expr)
+                }
+                ast::TableField::Expr { span, index, value } => {
+                    let index = self.visit_expr(index);
+                    let value = self.visit_expr(value);
+                    entries.insert(
+                        types::TableFieldKey::Computed(index.typ().clone()),
+                        value.typ().clone(),
+                    );
+                    (hir::TableFieldKey::Computed(index), value)
+                }
+                ast::TableField::Named { span, name, value } => {
+                    let value = self.visit_expr(value);
+                    entries.insert(
+                        types::TableFieldKey::Name(name.ty().as_name(), name.span()),
+                        value.typ().clone(),
+                    );
+                    (
+                        hir::TableFieldKey::Name(name.ty().as_name(), name.span()),
+                        value,
+                    )
+                }
+            };
+            fields.push(field);
+        }
+        let typ = types::Type::Table(types::Table {
+            span: node.span(),
+            entries,
+            metatable: None,
+        });
+        hir::Expr::Table(hir::Table {
+            span: node.span(),
+            typ,
+            node_id: self.nodes.alloc(node),
+            fields,
+            symbol: None,
+        })
     }
 
     fn visit_varargs_expr(&mut self, node: &'a lunar_ast::Token) -> Self::Output {
@@ -201,11 +249,11 @@ impl<'a> StmtVisitorWithLifetime<'a> for Binder<'a> {
         let exprs = {
             let mut exprs = Vec::new();
             for expr in node.exprlist().iter() {
-                let expr = self.visit_expr(expr);
-                let span = expr.span();
-                let types = expr.typ().clone().deref_tuples();
+                let expr_value = self.visit_expr(expr);
+                let span = expr_value.span();
+                let types = expr_value.typ().clone().deref_tuples();
                 for typ in types {
-                    exprs.push((span, typ));
+                    exprs.push((span, typ, expr_value.clone()));
                 }
             }
             exprs
@@ -233,6 +281,7 @@ impl<'a> StmtVisitorWithLifetime<'a> for Binder<'a> {
                 name_span: name.span(),
                 explicit_type,
                 expr_source,
+                expr_id: id,
                 expr,
             });
         }
@@ -241,6 +290,7 @@ impl<'a> StmtVisitorWithLifetime<'a> for Binder<'a> {
             variables,
             span: node.span(),
             node_id: self.nodes.alloc(node),
+            exprs: exprs.iter().map(|v| v.2.clone()).collect(),
         })
     }
 

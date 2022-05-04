@@ -3,6 +3,9 @@ use thiserror::Error;
 
 #[derive(Debug, Clone, PartialEq, Error)]
 pub enum AnalyzeError {
+    #[error("{metamethod} is used but it is not valid")]
+    InvalidMetamethod { span: Span, metamethod: String },
+
     #[error("{variable} is not defined but it has explicit type of {explicit_type}")]
     NotDefined {
         explicit_type: String,
@@ -44,6 +47,7 @@ impl AnalyzeError {
             AnalyzeError::MissingArgument { span, .. } => *span,
             AnalyzeError::NoArguments { span, .. } => *span,
             AnalyzeError::TypeHasNoParameters { span, .. } => *span,
+            AnalyzeError::InvalidMetamethod { span, .. } => *span,
         }
     }
 }

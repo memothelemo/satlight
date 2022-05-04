@@ -47,6 +47,7 @@ pub struct LocalAssignVar {
     pub name_span: Span,
     pub explicit_type: Option<Type>,
     pub expr_source: Option<Span>,
+    pub expr_id: usize,
     pub expr: Option<Type>,
 }
 
@@ -54,5 +55,6 @@ pub struct LocalAssignVar {
 pub struct LocalAssign<'a> {
     pub variables: Vec<LocalAssignVar>,
     pub span: Span,
+    pub exprs: Vec<Expr<'a>>,
     pub node_id: Id<&'a dyn Node>,
 }

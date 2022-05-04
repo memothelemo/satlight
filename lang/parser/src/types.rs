@@ -23,8 +23,78 @@ parser_struct!(ParseTypeInfo, ast::TypeInfo, |_, state: &ParseState<'a>| {
     parse_either!(state, {
         ParseTypeCallback => ast::TypeInfo::Callback,
         ParseTypeReference => ast::TypeInfo::Reference,
+        ParseTypeTable => ast::TypeInfo::Table,
     })
 });
+
+pub struct ParseTypeTableFieldNamed;
+parser_struct!(
+    ParseTypeTableFieldNamed,
+    ast::Token,
+    |_, state: &ParseState<'a>| {
+        parse_either!(state, {
+            ParseSymbol(ast::SymbolType::MetatableTag) => |e| e,
+            ParseName => |e| e,
+        })
+    }
+);
+
+pub struct ParseTypeTableField;
+parser_struct!(
+    ParseTypeTableField,
+    ast::TypeTableField,
+    |_, state: &ParseState<'a>| {
+        if let Ok((new_state, start)) = ParseSymbol(ast::SymbolType::OpenBracket).parse(state) {
+            let (new_state, key) = expect!(&new_state, ParseTypeInfo, "<type>");
+            let (new_state, _) =
+                expect!(&new_state, ParseSymbol(ast::SymbolType::CloseBracket), "]");
+            let (new_state, _) = expect!(&new_state, ParseSymbol(ast::SymbolType::Colon), ":");
+            let (new_state, value) = expect!(&new_state, ParseTypeInfo, "<type>");
+            return Ok((
+                new_state,
+                ast::TypeTableField::Computed {
+                    span: ast::Span::new(start.span().start, value.span().end),
+                    key: Box::new(key),
+                    value,
+                },
+            ));
+        } else if let Ok((new_state, index)) = ParseTypeTableFieldNamed.parse(state) {
+            let start_span = index.span().start;
+            if let Ok((new_state, _)) = ParseSymbol(ast::SymbolType::Colon).parse(&new_state) {
+                let (new_state, value) = expect!(&new_state, ParseTypeInfo, "<type>");
+                return Ok((
+                    new_state,
+                    ast::TypeTableField::Named {
+                        span: ast::Span::new(start_span, value.span().end),
+                        name: index,
+                        value,
+                    },
+                ));
+            }
+        }
+        let (state, type_info) = ParseTypeInfo.parse(state)?;
+        Ok((state, ast::TypeTableField::Array(type_info)))
+    }
+);
+
+pub struct ParseTypeTable;
+parser_struct!(
+    ParseTypeTable,
+    ast::TypeTable,
+    |_, state: &ParseState<'a>| {
+        // `{` [field, (field)*] `}`
+        let (state, start_symbol) = ParseSymbol(ast::SymbolType::OpenCurly).parse(state)?;
+        let start = start_symbol.span().start;
+        let (state, fields) =
+            ZeroOrMorePunctuatedTrailed(ParseTypeTableField, ParseSymbol(ast::SymbolType::Comma))
+                .parse(&state)?;
+        let (state, end_symbol) = expect!(&state, ParseSymbol(ast::SymbolType::CloseCurly), "}");
+        Ok((
+            state,
+            ast::TypeTable::new(ast::Span::new(start, end_symbol.span().end), fields),
+        ))
+    }
+);
 
 pub struct ParseTypeParameter;
 parser_struct!(

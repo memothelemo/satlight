@@ -53,11 +53,13 @@ pub trait TypeVisitor<'a> {
 
     fn visit_type_callback(&mut self, node: &TypeCallback) -> Self::Output;
     fn visit_type_reference(&mut self, node: &TypeReference) -> Self::Output;
+    fn visit_type_table(&mut self, node: &TypeTable) -> Self::Output;
 
     fn visit_type_info(&mut self, node: &TypeInfo) -> Self::Output {
         match node {
             TypeInfo::Callback(node) => self.visit_type_callback(node),
             TypeInfo::Reference(node) => self.visit_type_reference(node),
+            TypeInfo::Table(node) => self.visit_type_table(node),
         }
     }
 }

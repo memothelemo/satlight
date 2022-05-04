@@ -50,11 +50,13 @@ pub trait TypeVisitorWithLifetime<'a> {
 
     fn visit_type_callback(&mut self, node: &'a TypeCallback) -> Self::Output;
     fn visit_type_reference(&mut self, node: &'a TypeReference) -> Self::Output;
+    fn visit_type_table(&mut self, node: &'a TypeTable) -> Self::Output;
 
     fn visit_type_info(&mut self, node: &'a TypeInfo) -> Self::Output {
         match node {
             TypeInfo::Callback(node) => self.visit_type_callback(node),
             TypeInfo::Reference(node) => self.visit_type_reference(node),
+            TypeInfo::Table(node) => self.visit_type_table(node),
         }
     }
 }

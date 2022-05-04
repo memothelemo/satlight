@@ -1,0 +1,5 @@
+{
+	@metatable: {
+		__index: string,
+	},
+}
