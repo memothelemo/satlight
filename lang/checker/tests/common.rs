@@ -9,7 +9,6 @@ pub fn run_test_folder<P: AsRef<Path>>(folder: P, callback: &impl Fn(&Path)) {
         let file_ext = entry.path();
         if let Some(file_ext) = file_ext.extension() {
             if file_ext == "lun" {
-                dbg!(path.to_string_lossy());
                 callback(&path);
             }
         }
