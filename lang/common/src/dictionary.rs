@@ -71,6 +71,11 @@ where
             .and_then(|v| self.entries.get(v).as_ref().map(|v| &v.1))
     }
 
+    pub fn get_retrieve_id(&self, key: &K) -> Option<(usize, &V)> {
+        self.id_from_key(key)
+            .and_then(|id| self.entries.get(id).as_ref().map(|v| (id, &v.1)))
+    }
+
     pub fn id_from_key(&self, key: &K) -> Option<usize> {
         for (id, (entry, _)) in self.entries.iter().enumerate() {
             if entry == key {
@@ -116,6 +121,31 @@ where
 
     pub fn is_empty(&self) -> bool {
         self.entries.is_empty()
+    }
+
+    pub fn pick_limit(&self, limit: usize) -> Vec<&(K, V)> {
+        let mut count = 0;
+        let mut list = Vec::new();
+        while count < limit {
+            let member = self.entries.get(count);
+            if let Some(member) = member {
+                list.push(member);
+                count += 1;
+            } else {
+                break;
+            }
+        }
+        list
+    }
+
+    pub fn filter(&self, filter_call: impl Fn(&K, &V) -> bool) -> Vec<&(K, V)> {
+        let mut list = Vec::new();
+        for entry in self.entries.iter() {
+            if filter_call(&entry.0, &entry.1) {
+                list.push(entry);
+            }
+        }
+        list
     }
 }
 

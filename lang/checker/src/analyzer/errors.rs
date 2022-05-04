@@ -3,6 +3,23 @@ use thiserror::Error;
 
 #[derive(Debug, Clone, PartialEq, Error)]
 pub enum AnalyzeError {
+    #[error("Excessive field {key}")]
+    ExcessiveField { span: Span, key: String },
+
+    #[error("Invalid field {key}: {reason}")]
+    InvalidField {
+        span: Span,
+        key: String,
+        reason: Box<AnalyzeError>,
+    },
+
+    #[error("Missing field {key}, which it expects {expected}")]
+    MissingField {
+        span: Span,
+        key: String,
+        expected: String,
+    },
+
     #[error("{metamethod} is used but it is not valid")]
     InvalidMetamethod { span: Span, metamethod: String },
 
@@ -48,6 +65,9 @@ impl AnalyzeError {
             AnalyzeError::NoArguments { span, .. } => *span,
             AnalyzeError::TypeHasNoParameters { span, .. } => *span,
             AnalyzeError::InvalidMetamethod { span, .. } => *span,
+            AnalyzeError::MissingField { span, .. } => *span,
+            AnalyzeError::InvalidField { span, .. } => *span,
+            AnalyzeError::ExcessiveField { span, .. } => *span,
         }
     }
 }

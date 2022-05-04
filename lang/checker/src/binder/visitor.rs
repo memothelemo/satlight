@@ -49,7 +49,46 @@ impl<'a> TypeVisitor<'_> for Binder<'a> {
     }
 
     fn visit_type_table(&mut self, node: &ast::TypeTable) -> Self::Output {
-        todo!()
+        let mut entries = Dictionary::new();
+        let mut metatable = None;
+        let mut array_member_count = 0;
+        for field in node.fields().iter() {
+            match field {
+                ast::TypeTableField::Computed { span, key, value } => {
+                    let key = self.visit_type_info(key);
+                    let value = self.visit_type_info(value);
+                    entries.insert(types::TableFieldKey::Computed(key), value);
+                }
+                ast::TypeTableField::Named { span, name, value } => {
+                    let real_name = name.ty().as_name();
+                    let value = self.visit_type_info(value);
+                    if &real_name == "@metatable" {
+                        if metatable.is_none() {
+                            let table = types::Table {
+                                span: value.span(),
+                                entries: Dictionary::new(),
+                                metatable: None,
+                            };
+                            metatable = Some(Box::new(table));
+                        } else {
+                            // ERROR: Duplicated metatable
+                        }
+                    } else {
+                        entries.insert(types::TableFieldKey::Name(real_name, *span), value);
+                    }
+                }
+                ast::TypeTableField::Array(value) => {
+                    array_member_count += 1;
+                    let value = self.visit_type_info(value);
+                    entries.insert(types::TableFieldKey::None(array_member_count), value);
+                }
+            }
+        }
+        types::Type::Table(types::Table {
+            span: node.span(),
+            entries,
+            metatable,
+        })
     }
 }
 
@@ -83,11 +122,16 @@ impl<'a> ExprVisitorWithLifetime<'a> for Binder<'a> {
     fn visit_table_ctor_expr(&mut self, node: &'a lunar_ast::TableCtor) -> Self::Output {
         let mut fields = Vec::new();
         let mut entries = Dictionary::new();
+        let mut array_member_count = 0;
         for field in node.fields().iter() {
             let field = match field {
                 ast::TableField::Array(expr) => {
+                    array_member_count += 1;
                     let expr = self.visit_expr(expr);
-                    entries.insert(types::TableFieldKey::None, expr.typ().clone());
+                    entries.insert(
+                        types::TableFieldKey::None(array_member_count),
+                        expr.typ().clone(),
+                    );
                     (hir::TableFieldKey::None, expr)
                 }
                 ast::TableField::Expr { span, index, value } => {

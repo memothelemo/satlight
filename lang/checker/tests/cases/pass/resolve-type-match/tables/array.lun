@@ -1,0 +1,2 @@
+type A = { string, number }
+local sample: A = { "", 10 }

@@ -43,7 +43,7 @@ impl Type {
     }
 }
 
-#[derive(Debug, PartialEq, Clone, Hash)]
+#[derive(Debug, Clone)]
 pub enum TableFieldKey {
     ///   |----|
     /// { Hello = "World" }
@@ -54,7 +54,24 @@ pub enum TableFieldKey {
     Computed(Type),
 
     /// Array like member
-    None,
+    None(usize),
+}
+
+impl PartialEq for TableFieldKey {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Self::Name(l0, _), Self::Name(r0, _)) => l0 == r0,
+            (Self::Computed(l0), Self::Computed(r0)) => l0 == r0,
+            (Self::None(l0), Self::None(r0)) => l0 == r0,
+            _ => core::mem::discriminant(self) == core::mem::discriminant(other),
+        }
+    }
+}
+
+impl std::hash::Hash for TableFieldKey {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        core::mem::discriminant(self).hash(state);
+    }
 }
 
 #[derive(Debug, Clone)]

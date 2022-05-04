@@ -16,6 +16,7 @@ use lunar_tokenizer::tokenize;
 #[test]
 fn test_pass_cases() {
     run_test_folder("./tests/cases/pass", &|path| {
+        dbg!(path);
         let source = fs::read_to_string(path).expect("couldn't read the script file");
         let tokens = tokenize(&source).expect("failed to tokenize");
         let tokens = lunar_ast::filter_non_trivia_tokens(tokens);
@@ -34,6 +35,7 @@ fn test_pass_cases() {
 #[test]
 fn test_fail_cases() {
     run_test_folder("./tests/cases/fail", &|path| {
+        dbg!(path);
         let source = fs::read_to_string(path).expect("couldn't read the script file");
         let tokens = tokenize(&source).expect("failed to tokenize");
         let tokens = lunar_ast::filter_non_trivia_tokens(tokens);

@@ -1,4 +1,5 @@
 #![allow(unused)]
+use std::borrow::Borrow;
 use std::collections::HashMap;
 
 use crate::binder::Binder;
@@ -62,6 +63,49 @@ impl<'a> Analyzer<'a> {
 }
 
 impl<'a> Analyzer<'a> {
+    pub fn table_key_description(&self, key: &ctypes::TableFieldKey) -> String {
+        match key {
+            ctypes::TableFieldKey::Name(str, _) => str.to_string(),
+            ctypes::TableFieldKey::Computed(typ) => self.type_description(typ),
+            ctypes::TableFieldKey::None(id) => format!("[array {}]", id),
+        }
+    }
+
+    pub fn table_description(&self, tbl: &ctypes::Table) -> String {
+        // that's very long, but the maximum of table entries is about 5?
+        let mut entry_result = Vec::new();
+        let limited_entries = tbl.entries.pick_limit(5);
+
+        if limited_entries.is_empty() {
+            return String::from("{{}}");
+        }
+
+        for (key, value) in limited_entries {
+            entry_result.push(format!(
+                "{}{}",
+                {
+                    let result = self.table_key_description(key);
+                    if result.is_empty() {
+                        String::new()
+                    } else {
+                        format!("{}: ", result)
+                    }
+                },
+                self.type_description(value)
+            ));
+        }
+
+        if let Some(ref meta) = tbl.metatable {
+            entry_result.push(self.table_description(meta));
+        }
+
+        if tbl.entries.len() > 5 {
+            entry_result.push("..".to_string());
+        }
+
+        format!("{{ {} }}", entry_result.join(", "))
+    }
+
     pub fn type_description(&self, typ: &Type) -> String {
         match typ {
             Type::Ref(info) => info.name.to_string(),
@@ -82,7 +126,7 @@ impl<'a> Analyzer<'a> {
                 ctypes::LiteralKind::Void => "void",
             }
             .to_string(),
-            Type::Table(_) => todo!(),
+            Type::Table(tbl) => self.table_description(tbl),
             //Type::Alias(node) => node.name.to_string(),
         }
     }
@@ -206,6 +250,86 @@ impl<'a> Analyzer<'a> {
         let assertion = self.skip_downwards(assertion.clone());
         use ctypes::LiteralKind;
         match (&value, &assertion) {
+            (Type::Table(a), Type::Table(b)) => {
+                let mut counted_indexes = Vec::new();
+
+                // check for type similarites?
+                for (key, value) in b.entries.iter() {
+                    let intrisnic_type = if let ctypes::TableFieldKey::Computed(ty) = key {
+                        let ty = self.skip_downwards(ty.clone());
+                        match &ty {
+                            ctypes::Type::Literal(..) => Some(ty),
+                            _ => None,
+                        }
+                    } else {
+                        None
+                    };
+                    match a.entries.get_retrieve_id(key) {
+                        Some((id, other_value)) => {
+                            counted_indexes.push(id);
+                            self.resolve_type(value, other_value, span).map_err(|err| {
+                                AnalyzeError::InvalidField {
+                                    span,
+                                    key: self.table_key_description(key),
+                                    reason: Box::new(err),
+                                }
+                            })?;
+                        }
+                        None if intrisnic_type.is_some() => {
+                            let mut batched_values = Vec::new();
+                            let intrisnic_type = intrisnic_type.as_ref().unwrap();
+                            for (id, (ak, av)) in a.entries.iter().enumerate() {
+                                if let ctypes::TableFieldKey::Computed(a) = ak {
+                                    if self.resolve_type(a, intrisnic_type, span).is_ok() {
+                                        batched_values.push((id, (ak, av)));
+                                    }
+                                } else if let ctypes::TableFieldKey::Name(..) = ak {
+                                    // make sure the intrisnic type must be string >:(
+                                    if matches!(
+                                        intrisnic_type,
+                                        Type::Literal(ctypes::LiteralType {
+                                            kind: ctypes::LiteralKind::String,
+                                            ..
+                                        })
+                                    ) {
+                                        batched_values.push((id, (ak, av)));
+                                    }
+                                }
+                            }
+                            for (id, (ak, av)) in batched_values.iter() {
+                                counted_indexes.push(*id);
+                                self.resolve_type(value, av, span).map_err(|err| {
+                                    AnalyzeError::InvalidField {
+                                        span,
+                                        key: self.table_key_description(ak),
+                                        reason: Box::new(err),
+                                    }
+                                })?;
+                            }
+                        }
+                        None => {
+                            return Err(AnalyzeError::MissingField {
+                                span,
+                                key: self.table_key_description(key),
+                                expected: self.type_description(value),
+                            })
+                        }
+                    }
+                }
+
+                // table leftovers?
+                for (id, (key, value)) in a.entries.iter().enumerate() {
+                    if counted_indexes.contains(&id) {
+                        continue;
+                    }
+                    return Err(AnalyzeError::ExcessiveField {
+                        span,
+                        key: self.table_key_description(key),
+                    });
+                }
+
+                Ok(())
+            }
             (_, Type::Literal(l)) if matches!(l.kind, LiteralKind::Any | LiteralKind::Unknown) => {
                 Ok(())
             }

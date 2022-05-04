@@ -6,3 +6,6 @@ TEST_PROV_ARGS=--manifest-path
 test:
 	echo Testing all crates
 	$(foreach file, $(CARGO_MANIFESTS), $(TEST_PROV) $(TEST_PROV_ARGS) $(file);)
+
+test-checker:
+	$(TEST_PROV) $(TEST_PROV_ARGS) ./lang/checker/Cargo.toml
