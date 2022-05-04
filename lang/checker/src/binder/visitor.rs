@@ -41,7 +41,7 @@ impl<'a> TypeVisitor<'_> for Binder<'a> {
                 })
             }
             None => {
-                println!("Unknown type variable: {}", real_name);
+                // ERROR: Unknown type variable: {}", real_name
                 types::makers::any(node.span())
             }
         }
@@ -139,7 +139,7 @@ impl<'a> ExprVisitorWithLifetime<'a> for Binder<'a> {
                         })
                     }
                     None => {
-                        println!("Unknown variable: {}", real_name);
+                        // ERROR: "Unknown variable: {}", real_name
                         hir::Expr::Literal(hir::Literal {
                             typ: types::makers::any(node.span()),
                             symbol: None,

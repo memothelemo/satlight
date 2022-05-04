@@ -16,7 +16,6 @@ use lunar_tokenizer::tokenize;
 #[test]
 fn test_pass_cases() {
     run_test_folder("./tests/cases/pass", &|path| {
-        print!("Testing {}", path.to_string_lossy());
         let source = fs::read_to_string(path).expect("couldn't read the script file");
         let tokens = tokenize(&source).expect("failed to tokenize");
         let tokens = lunar_ast::filter_non_trivia_tokens(tokens);
@@ -26,7 +25,7 @@ fn test_pass_cases() {
         let config = Config::new(ConfigInfo::default(), PathBuf::from("."));
         let result = Analyzer::analyze(&binder, &config, &block);
         match result {
-            Ok(_) => println!("Passed"),
+            Ok(_) => {}
             Err(error) => panic!("Failed: {}", error),
         }
     });
@@ -46,7 +45,6 @@ fn test_fail_cases() {
         match result {
             Ok(_) => panic!("Expected fail"),
             Err(error) => {
-                println!("Passed");
                 let output_path = Path::new(path).with_extension("error");
                 fs::write(output_path, error.to_string()).expect("failed to write");
             }
