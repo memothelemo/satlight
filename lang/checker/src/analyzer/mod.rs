@@ -15,7 +15,7 @@ mod types;
 
 pub use errors::*;
 pub use exprs::*;
-use lunar_ast::Span;
+use salite_ast::Span;
 pub use stmts::*;
 pub use types::*;
 
@@ -40,7 +40,7 @@ impl<'a> Validate<'a> for hir::Block<'a> {
 #[derive(Debug)]
 pub struct Analyzer<'a> {
     binder: &'a Binder<'a>,
-    config: &'a lunar_common::Config,
+    config: &'a salite_common::Config,
 
     /// contemporary storage for type parameters
     type_vars: HashMap<String, Type>,
@@ -49,7 +49,7 @@ pub struct Analyzer<'a> {
 impl<'a> Analyzer<'a> {
     pub fn analyze(
         binder: &'a Binder,
-        config: &'a lunar_common::Config,
+        config: &'a salite_common::Config,
         file: &'a hir::File,
     ) -> Result<(), AnalyzeError> {
         let mut analyzer = Analyzer {

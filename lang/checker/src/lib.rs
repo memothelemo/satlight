@@ -11,7 +11,7 @@ pub mod meta {
     use analyzer::AnalyzeError;
     use bitflags::bitflags;
     use lazy_static::lazy_static;
-    use lunar_common::dictionary::Dictionary;
+    use salite_common::dictionary::Dictionary;
 
     bitflags! {
         pub struct AcceptedType: u32 {

@@ -1,7 +1,7 @@
 #![allow(non_upper_case_globals)]
 
 use bitflags::bitflags;
-use lunar_ast::Span;
+use salite_ast::Span;
 
 use crate::{hir::TypeParameter, types::Type};
 

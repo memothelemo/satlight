@@ -15,11 +15,11 @@ pub use visitors::*;
 #[macro_use]
 mod macros;
 
-pub use lunar_location::*;
-pub use lunar_tokens::*;
-pub use lunar_traits::SpannedNode;
+pub use salite_location::*;
+pub use salite_tokens::*;
+pub use salite_traits::SpannedNode;
 
-use lunar_macros::{CtorCall, FieldCall};
+use salite_macros::{CtorCall, FieldCall};
 
 pub trait Node: Debug {
     fn as_expr(&self) -> Option<Expr>;

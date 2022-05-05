@@ -2,14 +2,14 @@ use std::env;
 
 use anyhow::{anyhow, Context, Result};
 use log::SetLoggerError;
-use lunar::ast::Position;
+use salite::ast::Position;
 
 mod logger;
 
 fn compile() -> Result<()> {
     log::info!("Initializing project");
     let now = std::time::Instant::now();
-    let mut project = lunar::env::project::from_dir(".").with_context(|| {
+    let mut project = salite::env::project::from_dir(".").with_context(|| {
         format!(
             "Failed to load project from current directory: {}",
             std::env::current_dir().unwrap().to_string_lossy()
@@ -21,7 +21,7 @@ fn compile() -> Result<()> {
         .with_context(|| "Failed to reload project")?;
 
     #[allow(unused)]
-    let files = match lunar::env::parse_project(&project) {
+    let files = match salite::env::parse_project(&project) {
         Ok(files) => files,
         Err(errors) => {
             let elapsed = now.elapsed();
@@ -39,7 +39,7 @@ fn compile() -> Result<()> {
     log::info!("Took to initialize project: {:.2?}", elapsed);
 
     for (file_path, file) in files.into_iter() {
-        use lunar::checker::{analyzer, binder};
+        use salite::checker::{analyzer, binder};
         log::info!("Checking file: {}", file_path.to_string_lossy());
 
         let now = std::time::Instant::now();

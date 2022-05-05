@@ -2,22 +2,22 @@ use super::*;
 use crate::types::Type;
 use crate::{hir, types};
 use ast::AstVisitorWithLifetime;
-use lunar_ast as ast;
-use lunar_ast::{
+use salite_ast as ast;
+use salite_ast::{
     AstVisitor, ExprVisitorWithLifetime, LastStmtVisitorWithLifetime, SpannedNode,
     StmtVisitorWithLifetime, TypeVisitor,
 };
-use lunar_common::dictionary::Dictionary;
+use salite_common::dictionary::Dictionary;
 use std::borrow::Borrow;
 
 impl<'a> TypeVisitor<'_> for Binder<'a> {
     type Output = Type;
 
-    fn visit_type_callback(&mut self, node: &lunar_ast::TypeCallback) -> Self::Output {
+    fn visit_type_callback(&mut self, node: &salite_ast::TypeCallback) -> Self::Output {
         todo!()
     }
 
-    fn visit_type_reference(&mut self, node: &lunar_ast::TypeReference) -> Self::Output {
+    fn visit_type_reference(&mut self, node: &salite_ast::TypeReference) -> Self::Output {
         let scope = self.current_scope();
         let real_name = node.name().ty().as_name();
 
@@ -95,31 +95,31 @@ impl<'a> TypeVisitor<'_> for Binder<'a> {
 impl<'a> ExprVisitorWithLifetime<'a> for Binder<'a> {
     type Output = hir::Expr<'a>;
 
-    fn visit_bool_expr(&mut self, node: &'a lunar_ast::Token) -> Self::Output {
+    fn visit_bool_expr(&mut self, node: &'a salite_ast::Token) -> Self::Output {
         unimplemented!()
     }
 
-    fn visit_function_expr(&mut self, node: &'a lunar_ast::FunctionExpr) -> Self::Output {
+    fn visit_function_expr(&mut self, node: &'a salite_ast::FunctionExpr) -> Self::Output {
         todo!()
     }
 
-    fn visit_name_expr(&mut self, node: &'a lunar_ast::Token) -> Self::Output {
+    fn visit_name_expr(&mut self, node: &'a salite_ast::Token) -> Self::Output {
         unimplemented!()
     }
 
-    fn visit_number_expr(&mut self, node: &'a lunar_ast::Token) -> Self::Output {
+    fn visit_number_expr(&mut self, node: &'a salite_ast::Token) -> Self::Output {
         unimplemented!()
     }
 
-    fn visit_nil_expr(&mut self, node: &'a lunar_ast::Token) -> Self::Output {
+    fn visit_nil_expr(&mut self, node: &'a salite_ast::Token) -> Self::Output {
         unimplemented!()
     }
 
-    fn visit_str_expr(&mut self, node: &'a lunar_ast::Token) -> Self::Output {
+    fn visit_str_expr(&mut self, node: &'a salite_ast::Token) -> Self::Output {
         unimplemented!()
     }
 
-    fn visit_table_ctor_expr(&mut self, node: &'a lunar_ast::TableCtor) -> Self::Output {
+    fn visit_table_ctor_expr(&mut self, node: &'a salite_ast::TableCtor) -> Self::Output {
         let mut fields = Vec::new();
         let mut entries = Dictionary::new();
         let mut array_member_count = 0;
@@ -171,23 +171,23 @@ impl<'a> ExprVisitorWithLifetime<'a> for Binder<'a> {
         })
     }
 
-    fn visit_varargs_expr(&mut self, node: &'a lunar_ast::Token) -> Self::Output {
+    fn visit_varargs_expr(&mut self, node: &'a salite_ast::Token) -> Self::Output {
         todo!()
     }
 
-    fn visit_binary_expr(&mut self, node: &'a lunar_ast::Binary) -> Self::Output {
+    fn visit_binary_expr(&mut self, node: &'a salite_ast::Binary) -> Self::Output {
         todo!()
     }
 
-    fn visit_paren_expr(&mut self, node: &'a lunar_ast::Expr) -> Self::Output {
+    fn visit_paren_expr(&mut self, node: &'a salite_ast::Expr) -> Self::Output {
         self.visit_expr(node)
     }
 
-    fn visit_suffixed_expr(&mut self, node: &'a lunar_ast::Suffixed) -> Self::Output {
+    fn visit_suffixed_expr(&mut self, node: &'a salite_ast::Suffixed) -> Self::Output {
         todo!()
     }
 
-    fn visit_type_assertion_expr(&mut self, node: &'a lunar_ast::TypeAssertion) -> Self::Output {
+    fn visit_type_assertion_expr(&mut self, node: &'a salite_ast::TypeAssertion) -> Self::Output {
         hir::Expr::TypeAssertion(hir::TypeAssertion {
             base: Box::new(self.visit_expr(node.base().borrow())),
             cast: self.visit_type_info(node.cast()),
@@ -197,11 +197,11 @@ impl<'a> ExprVisitorWithLifetime<'a> for Binder<'a> {
         })
     }
 
-    fn visit_unary_expr(&mut self, node: &'a lunar_ast::Unary) -> Self::Output {
+    fn visit_unary_expr(&mut self, node: &'a salite_ast::Unary) -> Self::Output {
         todo!()
     }
 
-    fn visit_suffix_kind_expr(&mut self, node: &'a lunar_ast::SuffixKind) -> Self::Output {
+    fn visit_suffix_kind_expr(&mut self, node: &'a salite_ast::SuffixKind) -> Self::Output {
         todo!()
     }
 
@@ -268,28 +268,28 @@ impl<'a> ExprVisitorWithLifetime<'a> for Binder<'a> {
 impl<'a> StmtVisitorWithLifetime<'a> for Binder<'a> {
     type Output = hir::Stmt<'a>;
 
-    fn visit_call_stmt(&mut self, node: &'a lunar_ast::Expr) -> Self::Output {
+    fn visit_call_stmt(&mut self, node: &'a salite_ast::Expr) -> Self::Output {
         self.visit_expr(node);
         todo!()
     }
 
-    fn visit_do_stmt(&mut self, node: &'a lunar_ast::DoStmt) -> Self::Output {
+    fn visit_do_stmt(&mut self, node: &'a salite_ast::DoStmt) -> Self::Output {
         todo!()
     }
 
-    fn visit_function_assign_stmt(&mut self, node: &'a lunar_ast::FunctionAssign) -> Self::Output {
+    fn visit_function_assign_stmt(&mut self, node: &'a salite_ast::FunctionAssign) -> Self::Output {
         todo!()
     }
 
-    fn visit_generic_for_stmt(&mut self, node: &'a lunar_ast::GenericFor) -> Self::Output {
+    fn visit_generic_for_stmt(&mut self, node: &'a salite_ast::GenericFor) -> Self::Output {
         todo!()
     }
 
-    fn visit_if_stmt(&mut self, node: &'a lunar_ast::IfStmt) -> Self::Output {
+    fn visit_if_stmt(&mut self, node: &'a salite_ast::IfStmt) -> Self::Output {
         todo!()
     }
 
-    fn visit_local_assign_stmt(&mut self, node: &'a lunar_ast::LocalAssign) -> Self::Output {
+    fn visit_local_assign_stmt(&mut self, node: &'a salite_ast::LocalAssign) -> Self::Output {
         let exprs = {
             let mut exprs = Vec::new();
             for expr in node.exprlist().iter() {
@@ -338,29 +338,29 @@ impl<'a> StmtVisitorWithLifetime<'a> for Binder<'a> {
         })
     }
 
-    fn visit_local_function_stmt(&mut self, node: &'a lunar_ast::LocalFunction) -> Self::Output {
+    fn visit_local_function_stmt(&mut self, node: &'a salite_ast::LocalFunction) -> Self::Output {
         todo!()
     }
 
-    fn visit_numeric_for_stmt(&mut self, node: &'a lunar_ast::NumericFor) -> Self::Output {
+    fn visit_numeric_for_stmt(&mut self, node: &'a salite_ast::NumericFor) -> Self::Output {
         todo!()
     }
 
-    fn visit_repeat_stmt(&mut self, node: &'a lunar_ast::RepeatStmt) -> Self::Output {
+    fn visit_repeat_stmt(&mut self, node: &'a salite_ast::RepeatStmt) -> Self::Output {
         todo!()
     }
 
-    fn visit_while_stmt(&mut self, node: &'a lunar_ast::WhileStmt) -> Self::Output {
+    fn visit_while_stmt(&mut self, node: &'a salite_ast::WhileStmt) -> Self::Output {
         todo!()
     }
 
-    fn visit_var_assign_stmt(&mut self, node: &'a lunar_ast::VarAssign) -> Self::Output {
+    fn visit_var_assign_stmt(&mut self, node: &'a salite_ast::VarAssign) -> Self::Output {
         todo!()
     }
 
     fn visit_type_declaration_stmt(
         &mut self,
-        node: &'a lunar_ast::TypeDeclaration,
+        node: &'a salite_ast::TypeDeclaration,
     ) -> Self::Output {
         // get all the type parameters first...
         let parameters = if let Some(real_params) = node.params() {
@@ -433,7 +433,7 @@ impl<'a> StmtVisitorWithLifetime<'a> for Binder<'a> {
 impl<'a> AstVisitorWithLifetime<'a> for Binder<'a> {
     type BlockOutput = hir::Block<'a>;
 
-    fn visit_block(&mut self, node: &'a lunar_ast::Block) -> Self::BlockOutput {
+    fn visit_block(&mut self, node: &'a salite_ast::Block) -> Self::BlockOutput {
         let stmts = node
             .stmts()
             .iter()

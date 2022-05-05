@@ -1,14 +1,14 @@
 [package]
-name = "lunar_tokens"
+name = "salite_tokens"
 version = "0.1.0"
 edition = "2021"
 
 [features]
 default = []
-serde = ["lunar_location/serde"]
+serde = ["salite_location/serde"]
 
 [dependencies]
-lunar_location = { path = "../location" }
-lunar_traits = { path = "../traits" }
+salite_location = { path = "../location" }
+salite_traits = { path = "../traits" }
 serde = { version = "1.0.0", features = ["derive", "rc"] }
 smol_str = "0.1.21"

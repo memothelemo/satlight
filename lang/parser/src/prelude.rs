@@ -1,2 +1,2 @@
-pub use lunar_ast as ast;
-pub use lunar_common::errors::parser::*;
+pub use salite_ast as ast;
+pub use salite_common::errors::parser::*;

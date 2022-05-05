@@ -6,7 +6,7 @@ pub use file::*;
 pub mod project;
 
 use chashmap::CHashMap;
-use lunarscript::common::errors::{LunarError, TextSpanOutOfBounds};
+use salitescript::common::errors::{SaliteError, TextSpanOutOfBounds};
 use std::path::PathBuf;
 use thiserror::Error;
 
@@ -23,7 +23,7 @@ pub enum ParseProjectError {
         message: String,
 
         /// The source of an error in a file
-        span: lunarscript::ast::Span,
+        span: salitescript::ast::Span,
     },
 
     /// This error caused by a text span out of bounds while
@@ -35,13 +35,13 @@ pub enum ParseProjectError {
 /// Attempts to compile all of the files from the Project object
 pub fn parse_project(
     project: &project::Project,
-) -> Result<CHashMap<PathBuf, lunarscript::ast::File>, Vec<ParseProjectError>> {
+) -> Result<CHashMap<PathBuf, salitescript::ast::File>, Vec<ParseProjectError>> {
     let mut errors = Vec::new();
     let collection = CHashMap::new();
 
     for file in project.files() {
         log::debug!("Compiling {}", file.path().to_string_lossy());
-        let ast = match lunarscript::lazy_parse(file.contents()) {
+        let ast = match salitescript::lazy_parse(file.contents()) {
             Ok(ast) => ast,
             Err(err) => {
                 errors.push(ParseProjectError::ParseError {

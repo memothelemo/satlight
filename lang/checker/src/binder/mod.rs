@@ -14,7 +14,7 @@ pub use symbols::*;
 pub use visitor::*;
 
 pub struct Binder<'a> {
-    pub nodes: Arena<&'a dyn lunar_ast::Node>,
+    pub nodes: Arena<&'a dyn salite_ast::Node>,
     pub scopes: Arena<Scope>,
     pub stack: Vec<Id<Scope>>,
     pub symbols: Arena<Symbol>,
@@ -34,11 +34,11 @@ use crate::{
     hir::{self, TypeParameter},
     types::Type,
 };
-use lunar_ast::{AstVisitorWithLifetime, Span};
+use salite_ast::{AstVisitorWithLifetime, Span};
 
 impl<'a> Binder<'a> {
     #[allow(clippy::new_without_default)]
-    pub fn new(block: &'a lunar_ast::File) -> (Binder<'a>, hir::File<'a>) {
+    pub fn new(block: &'a salite_ast::File) -> (Binder<'a>, hir::File<'a>) {
         let mut binder: Binder<'a> = Self {
             nodes: Arena::new(),
             scopes: Arena::new(),
@@ -78,7 +78,7 @@ impl<'a> Binder<'a> {
         }
     }
 
-    fn visit_file(&mut self, file: &'a lunar_ast::File) -> hir::Block<'a> {
+    fn visit_file(&mut self, file: &'a salite_ast::File) -> hir::Block<'a> {
         self.push_scope(ScopeKind::Block);
         let block = self.visit_block(file.block());
         self.pop_scope();

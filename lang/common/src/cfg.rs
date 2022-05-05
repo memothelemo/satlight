@@ -1,4 +1,4 @@
-use lunar_macros::FieldCall;
+use salite_macros::FieldCall;
 use serde::Deserialize;
 use std::path::{self, PathBuf};
 use thiserror::Error;
@@ -15,15 +15,15 @@ pub enum ConfigError {
     Parse(serde_json::Error),
 }
 
-/// Compiler configuration contents for the Lunar project object.
+/// Compiler configuration contents for the Salite project object.
 #[derive(Debug, Default, PartialEq, Deserialize)]
 pub struct ConfigInfo {
     /// The entire directory must be mostly filled with
-    /// Lunar source files
+    /// Salite source files
     #[serde(rename = "sourceDir")]
     pub source_dir: PathBuf,
 
-    /// Output Lua files compiled from Lunar source files
+    /// Output Lua files compiled from Salite source files
     #[serde(rename = "outDir")]
     pub output_dir: PathBuf,
 }
@@ -35,7 +35,7 @@ impl ConfigInfo {
     }
 }
 
-/// Compiler configuration for the Lunar project object.
+/// Compiler configuration for the Salite project object.
 #[derive(FieldCall)]
 pub struct Config {
     /// The contents of the configuration file itself

@@ -3,8 +3,8 @@ mod atom;
 use atom::*;
 use logos::Logos;
 
-use lunar_ast::*;
-use lunar_common::errors::tokenizer::*;
+use salite_ast::*;
+use salite_common::errors::tokenizer::*;
 
 type UnknownToken = (Result<TokenType, TokenizeErrorType>, Span);
 

@@ -1,23 +1,23 @@
 [package]
-name = "lunarscript"
+name = "salitescript"
 version = "0.1.0"
 edition = "2018"
 
 [features]
-full = ["lunar_ast", "lunar_common", "lunar_macros", "lunar_parser", "lunar_tokenizer", "lunar_checker"]
-lazy_parse = ["lunar_ast", "lunar_common", "lunar_parser", "lunar_tokenizer"]
+full = ["salite_ast", "salite_common", "salite_macros", "salite_parser", "salite_tokenizer", "salite_checker"]
+lazy_parse = ["salite_ast", "salite_common", "salite_parser", "salite_tokenizer"]
 
-ast = ["lunar_ast"]
-checker = ["lunar_checker"]
-common = ["lunar_common"]
-macros = ["lunar_macros"]
-parser = ["lunar_parser"]
-tokenizer = ["lunar_tokenizer"]
+ast = ["salite_ast"]
+checker = ["salite_checker"]
+common = ["salite_common"]
+macros = ["salite_macros"]
+parser = ["salite_parser"]
+tokenizer = ["salite_tokenizer"]
 
 [dependencies]
-lunar_ast = { path = "../ast", optional = true }
-lunar_checker = { path = "../checker", optional = true }
-lunar_common = { path = "../common", optional = true }
-lunar_macros = { path = "../macros", optional = true }
-lunar_parser = { path = "../parser", optional = true }
-lunar_tokenizer = { path = "../tokenizer", optional = true }
+salite_ast = { path = "../ast", optional = true }
+salite_checker = { path = "../checker", optional = true }
+salite_common = { path = "../common", optional = true }
+salite_macros = { path = "../macros", optional = true }
+salite_parser = { path = "../parser", optional = true }
+salite_tokenizer = { path = "../tokenizer", optional = true }

@@ -7,9 +7,9 @@ use std::{
 use thiserror::Error;
 use walkdir::WalkDir;
 
-use lunarscript::common::{Config, ConfigError};
+use salitescript::common::{Config, ConfigError};
 
-/// Errors given when loading or doing something with Lunar project.
+/// Errors given when loading or doing something with Salite project.
 #[derive(Debug, Error)]
 pub enum ProjectError {
     /// This error caused by a config load error
@@ -17,7 +17,7 @@ pub enum ProjectError {
     Config(ConfigError),
 
     /// This error caused by a directory has no config file
-    #[error("A directory has a no config file 'lunarcfg.json'")]
+    #[error("A directory has a no config file 'sltcfg.json'")]
     DirectoryNoConfig,
 
     /// This error caused by a config file doesn't have a parent to begin with.
@@ -33,8 +33,8 @@ pub enum ProjectError {
     IO(std::io::Error),
 }
 
-/// The entire Lunar project session. Created by a
-/// main project directory that has `lunarcfg.json` file.
+/// The entire Salite project session. Created by a
+/// main project directory that has `sltcfg.json` file.
 #[derive(Debug)]
 pub struct Project {
     config: Config,
@@ -71,7 +71,7 @@ impl Project {
 
             let file_path = entry.path();
             if let Some(file_ext) = file_path.extension() {
-                if file_ext == "lun" {
+                if file_ext == "slt" {
                     results.push(file_path.to_path_buf());
                 }
             }
@@ -136,7 +136,7 @@ impl Project {
     }
 }
 
-/// Loads Lunar project from the config file path
+/// Loads Salite project from the config file path
 pub fn from_file<T: AsRef<path::Path>>(file: T) -> Result<Project, ProjectError> {
     // load the config file
     let cfg = Config::load_file(&file).map_err(ProjectError::Config)?;
@@ -151,9 +151,9 @@ pub fn from_file<T: AsRef<path::Path>>(file: T) -> Result<Project, ProjectError>
     Ok(Project::new(cfg, parent_dir))
 }
 
-/// Loads Lunar project from the directory path
+/// Loads Salite project from the directory path
 pub fn from_dir<T: AsRef<path::Path>>(dir: T) -> Result<Project, ProjectError> {
-    // look for config file candidates, because sometimes there are many lunarcfg variants
+    // look for config file candidates, because sometimes there are many sltcfg variants
     let candidates = look_cfg_files(&dir).map_err(ProjectError::IO)?;
 
     // look for the best candidates in a deque vector
@@ -165,7 +165,7 @@ pub fn from_dir<T: AsRef<path::Path>>(dir: T) -> Result<Project, ProjectError> {
     }
 }
 
-/// Looks for files starting with 'lunarcfg' and is JSON. (`lunarcfg.json` file)
+/// Looks for files starting with 'sltcfg' and is JSON. (`sltcfg.json` file)
 pub fn look_cfg_files<T: AsRef<path::Path>>(dir: T) -> Result<VecDeque<PathBuf>, std::io::Error> {
     let mut candidates = VecDeque::new();
     let directory = std::fs::read_dir(&dir)?;
@@ -180,11 +180,11 @@ pub fn look_cfg_files<T: AsRef<path::Path>>(dir: T) -> Result<VecDeque<PathBuf>,
             let file_name = entry.file_name();
             let file_name = file_name.to_string_lossy();
 
-            // find a file starts with 'lunarcfg' and its extension is a JSON file
-            // example: 'lunarcfg.json' or 'lunarcfg-other.json'
-            if file_ext == "json" && file_name.starts_with("lunarcfg") {
+            // find a file starts with 'sltcfg' and its extension is a JSON file
+            // example: 'sltcfg.json' or 'sltcfg-other.json'
+            if file_ext == "json" && file_name.starts_with("sltcfg") {
                 // first priority
-                if file_name == "lunarcfg" {
+                if file_name == "sltcfg" {
                     candidates.push_back(file_path);
                 } else {
                     candidates.push_front(file_path);

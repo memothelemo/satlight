@@ -1,17 +1,17 @@
 [package]
-name = "lunar_parser"
+name = "salite_parser"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-lunar_ast = { path = "../ast" }
-lunar_common = { path = "../common" }
-lunar_traits = { path = "../traits" }
+salite_ast = { path = "../ast" }
+salite_common = { path = "../common" }
+salite_traits = { path = "../traits" }
 
 [dev-dependencies]
-lunar_ast = { path = "../ast", features = ["serde"] }
-lunar_common = { path = "../common", features = ["serde"] }
-lunar_tokenizer = { path = "../tokenizer" }
-lunar_tokens = { path = "../tokens", features = ["serde"] }
+salite_ast = { path = "../ast", features = ["serde"] }
+salite_common = { path = "../common", features = ["serde"] }
+salite_tokenizer = { path = "../tokenizer" }
+salite_tokens = { path = "../tokens", features = ["serde"] }
 serde = { version = "1.0.0", features = ["derive", "rc"] }
 serde_json = "1.0.0"

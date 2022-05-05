@@ -3,9 +3,9 @@ use serde::{Deserialize, Serialize};
 
 use super::*;
 
-use lunar_location::Span;
-use lunar_macros::{CtorCall, FieldCall};
-use lunar_traits::SpannedNode;
+use salite_location::Span;
+use salite_macros::{CtorCall, FieldCall};
+use salite_traits::SpannedNode;
 
 mod op;
 pub use op::*;

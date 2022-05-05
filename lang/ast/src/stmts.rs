@@ -2,8 +2,8 @@
 use serde::{Deserialize, Serialize};
 
 use super::*;
-use lunar_macros::{CtorCall, FieldCall};
-use lunar_traits::SpannedNode;
+use salite_macros::{CtorCall, FieldCall};
+use salite_traits::SpannedNode;
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, Clone, PartialEq, FieldCall, CtorCall)]

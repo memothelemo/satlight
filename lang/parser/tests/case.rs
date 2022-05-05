@@ -1,6 +1,6 @@
-use lunar_ast as ast;
-use lunar_parser as parser;
-use lunar_tokenizer as tokenizer;
+use salite_ast as ast;
+use salite_parser as parser;
+use salite_tokenizer as tokenizer;
 
 use std::{
     fs::{self, File},
@@ -8,7 +8,7 @@ use std::{
     path::Path,
 };
 
-const TARGET_FILE_EXT: &str = "lun";
+const TARGET_FILE_EXT: &str = "slt";
 
 macro_rules! create_parse_case {
     {

@@ -5,10 +5,10 @@ pub fn run_test_folder<P: AsRef<Path>>(folder: P, callback: &impl Fn(&Path)) {
         let entry = entry.unwrap();
         let path = entry.path().canonicalize().unwrap();
 
-        // check if that file extension is lun only
+        // check if that file extension is slt only
         let file_ext = entry.path();
         if let Some(file_ext) = file_ext.extension() {
-            if file_ext == "lun" {
+            if file_ext == "slt" {
                 callback(&path);
             }
         }

@@ -7,11 +7,11 @@ use std::{
 
 use common::run_test_folder;
 
-use lunar_checker::{analyzer::Analyzer, binder::Binder};
-use lunar_common::{Config, ConfigInfo};
+use salite_checker::{analyzer::Analyzer, binder::Binder};
+use salite_common::{Config, ConfigInfo};
 
-use lunar_parser::parse_file;
-use lunar_tokenizer::tokenize;
+use salite_parser::parse_file;
+use salite_tokenizer::tokenize;
 
 #[test]
 fn test_pass_cases() {
@@ -19,7 +19,7 @@ fn test_pass_cases() {
         dbg!(path);
         let source = fs::read_to_string(path).expect("couldn't read the script file");
         let tokens = tokenize(&source).expect("failed to tokenize");
-        let tokens = lunar_ast::filter_non_trivia_tokens(tokens);
+        let tokens = salite_ast::filter_non_trivia_tokens(tokens);
         let file = parse_file(&tokens).expect("failed to parse");
 
         let (binder, block) = Binder::new(&file);
@@ -38,7 +38,7 @@ fn test_fail_cases() {
         dbg!(path);
         let source = fs::read_to_string(path).expect("couldn't read the script file");
         let tokens = tokenize(&source).expect("failed to tokenize");
-        let tokens = lunar_ast::filter_non_trivia_tokens(tokens);
+        let tokens = salite_ast::filter_non_trivia_tokens(tokens);
         let file = parse_file(&tokens).expect("failed to parse");
 
         let (binder, block) = Binder::new(&file);

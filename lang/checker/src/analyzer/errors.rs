@@ -1,4 +1,4 @@
-use lunar_ast::Span;
+use salite_ast::Span;
 use thiserror::Error;
 
 #[derive(Debug, Clone, PartialEq, Error)]
@@ -72,8 +72,8 @@ impl AnalyzeError {
     }
 }
 
-impl lunar_common::errors::LunarError for AnalyzeError {
-    fn message(&self, _: &str) -> Result<String, lunar_common::errors::TextSpanOutOfBounds> {
+impl salite_common::errors::SaliteError for AnalyzeError {
+    fn message(&self, _: &str) -> Result<String, salite_common::errors::TextSpanOutOfBounds> {
         Ok(self.to_string())
     }
 }

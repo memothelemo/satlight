@@ -1,6 +1,6 @@
 use super::*;
 use crate::ast;
-use lunar_traits::SpannedNode;
+use salite_traits::SpannedNode;
 
 use crate::{expect, parse_either, parser_struct};
 

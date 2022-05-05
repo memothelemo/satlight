@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 #[macro_use]
 mod macros;
 
-use lunar_location::Span;
+use salite_location::Span;
 use smol_str::SmolStr;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -143,7 +143,7 @@ pub struct Token {
     span: Span,
 }
 
-impl lunar_traits::SpannedNode for Token {
+impl salite_traits::SpannedNode for Token {
     fn span(&self) -> Span {
         self.span
     }

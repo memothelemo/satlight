@@ -1,23 +1,23 @@
 #[cfg(any(feature = "ast", feature = "full"))]
-pub use lunar_ast as ast;
+pub use salite_ast as ast;
 
 #[cfg(any(feature = "checker", feature = "full"))]
-pub use lunar_checker as checker;
+pub use salite_checker as checker;
 
 #[cfg(any(feature = "common", feature = "full"))]
-pub use lunar_common as common;
+pub use salite_common as common;
 
 #[cfg(any(feature = "macros", feature = "full"))]
-pub use lunar_macros as macros;
+pub use salite_macros as macros;
 
 #[cfg(any(feature = "parser", feature = "full"))]
-pub use lunar_parser as parser;
+pub use salite_parser as parser;
 
 #[cfg(any(feature = "tokenizer", feature = "full"))]
-pub use lunar_tokenizer as tokenizer;
+pub use salite_tokenizer as tokenizer;
 
 #[cfg(any(feature = "lazy_parse", feature = "full"))]
-use lunar_common::errors;
+use salite_common::errors;
 
 #[cfg(any(feature = "lazy_parse", feature = "full"))]
 #[derive(Debug)]
@@ -37,7 +37,7 @@ impl LazyParseError {
 }
 
 #[cfg(any(feature = "lazy_parse", feature = "full"))]
-impl errors::LunarError for LazyParseError {
+impl errors::SaliteError for LazyParseError {
     fn message(&self, code: &str) -> Result<String, errors::TextSpanOutOfBounds> {
         match self {
             LazyParseError::ParseError(err) => err.message(code),

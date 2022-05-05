@@ -8,7 +8,7 @@ mod stmts;
 mod types;
 
 pub use exprs::*;
-use lunar_traits::SpannedNode;
+use salite_traits::SpannedNode;
 pub use others::*;
 pub use stmts::*;
 pub use types::*;
@@ -16,7 +16,7 @@ pub use types::*;
 mod prelude;
 use prelude::*;
 
-pub use lunar_common::errors::parser::*;
+pub use salite_common::errors::parser::*;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ParseState<'a> {

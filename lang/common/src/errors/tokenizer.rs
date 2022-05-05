@@ -1,9 +1,9 @@
-use lunar_location::Span;
+use salite_location::Span;
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-use super::LunarError;
+use super::SaliteError;
 
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
@@ -26,7 +26,7 @@ impl std::fmt::Display for TokenizeErrorType {
     }
 }
 
-impl LunarError for TokenizeErrorType {
+impl SaliteError for TokenizeErrorType {
     fn message(&self, _: &str) -> Result<String, super::TextSpanOutOfBounds> {
         Ok(self.to_string())
     }
@@ -39,7 +39,7 @@ pub struct TokenizeError {
     pub ty: TokenizeErrorType,
 }
 
-impl LunarError for TokenizeError {
+impl SaliteError for TokenizeError {
     fn message(&self, code: &str) -> Result<String, super::TextSpanOutOfBounds> {
         self.ty.message(code)
     }

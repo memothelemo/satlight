@@ -1,7 +1,7 @@
 use crate::binder::Symbol;
 use id_arena::Id;
-use lunar_ast::Span;
-use lunar_common::dictionary::Dictionary;
+use salite_ast::Span;
+use salite_common::dictionary::Dictionary;
 
 pub mod makers;
 pub mod utils;

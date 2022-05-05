@@ -1,7 +1,7 @@
 use super::*;
 use crate::{binder::Symbol, types::Type};
 use id_arena::Id;
-use lunar_ast::{Node, Span};
+use salite_ast::{Node, Span};
 
 #[derive(Debug)]
 pub enum LastStmt<'a> {

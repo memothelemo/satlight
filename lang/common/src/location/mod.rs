@@ -1,4 +1,4 @@
-use lunar_location::Span;
+use salite_location::Span;
 
 mod file;
 pub use file::*;

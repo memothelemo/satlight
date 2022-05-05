@@ -13,14 +13,14 @@ pub enum InternalParseError {
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub enum ParseErrorType {
     Internal(InternalParseError),
-    UnexpectedToken(lunar_tokens::Token),
+    UnexpectedToken(salite_tokens::Token),
     Expected {
         expected: String,
-        token: lunar_tokens::Token,
+        token: salite_tokens::Token,
     },
 }
 
-impl LunarError for ParseErrorType {
+impl SaliteError for ParseErrorType {
     fn message(&self, code: &str) -> Result<String, TextSpanOutOfBounds> {
         Ok(match self {
             ParseErrorType::Internal(typ) => match typ {
@@ -44,10 +44,10 @@ impl LunarError for ParseErrorType {
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub struct ParseError {
     pub ty: ParseErrorType,
-    pub span: lunar_location::Span,
+    pub span: salite_location::Span,
 }
 
-impl LunarError for ParseError {
+impl SaliteError for ParseError {
     fn message(&self, code: &str) -> Result<String, TextSpanOutOfBounds> {
         self.ty.message(code)
     }

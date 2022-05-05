@@ -4,7 +4,7 @@ mod stmt;
 pub use expr::*;
 pub use stmt::*;
 
-use lunar_ast::Span;
+use salite_ast::Span;
 
 #[derive(Debug)]
 pub struct Block<'a> {

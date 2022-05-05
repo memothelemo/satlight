@@ -1,4 +1,4 @@
-## Lunar
+## Salite
 
 ```
 local function factorial(n: number) -> number

@@ -2,7 +2,7 @@ pub mod parser;
 pub mod tokenizer;
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct TextSpanOutOfBounds(pub lunar_location::Span);
+pub struct TextSpanOutOfBounds(pub salite_location::Span);
 
 impl std::fmt::Display for TextSpanOutOfBounds {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -19,7 +19,7 @@ impl std::error::Error for TextSpanOutOfBounds {}
 #[allow(clippy::needless_lifetimes)]
 pub fn get_token_ranged<'a>(
     template: &'a str,
-    span: lunar_location::Span,
+    span: salite_location::Span,
 ) -> Result<&str, TextSpanOutOfBounds> {
     if !span.is_valid() {
         Err(TextSpanOutOfBounds(span))
@@ -33,6 +33,6 @@ pub fn get_token_ranged<'a>(
     }
 }
 
-pub trait LunarError {
+pub trait SaliteError {
     fn message(&self, code: &str) -> Result<String, TextSpanOutOfBounds>;
 }

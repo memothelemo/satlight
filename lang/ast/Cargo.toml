@@ -1,16 +1,16 @@
 [package]
-name = "lunar_ast"
+name = "salite_ast"
 version = "0.1.0"
 edition = "2021"
 
 [features]
 default = []
-serde = ["lunar_tokens/serde"]
+serde = ["salite_tokens/serde"]
 
 [dependencies]
-lunar_location = { path = "../location" }
-lunar_macros = { path = "../macros" }
-lunar_tokens = { path = "../tokens" }
-lunar_traits = { path = "../traits" }
+salite_location = { path = "../location" }
+salite_macros = { path = "../macros" }
+salite_tokens = { path = "../tokens" }
+salite_traits = { path = "../traits" }
 smol_str = { version = "0.1.23", features = ["serde"] }
 serde = { version = "1.0.0", features = ["derive", "rc"] }

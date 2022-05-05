@@ -2,12 +2,12 @@
 members = ["lang/*"]
 
 [package]
-name = "lunar"
+name = "salite"
 version = "0.1.0"
 edition = "2018"
 
 [[bin]]
-name = "lunar"
+name = "salite"
 path = "src/cli/main.rs"
 
 [dependencies]
@@ -16,7 +16,7 @@ chashmap = "2.2.2"
 id-arena = "2.2.1"
 lazy_static = "1.4.0"
 log = { version = "0.4.17", features = ["std"] }
-lunarscript = { path = "./lang/root", features = ["full"] }
+salitescript = { path = "./lang/root", features = ["full"] }
 serde = { version = "1.0.0", features = ["derive", "rc"] }
 serde_json = "1.0.0"
 thiserror = "1.0.31"

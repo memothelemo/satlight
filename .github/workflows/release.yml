@@ -21,8 +21,8 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v1
         with:
-          name: lunar-win64
-          path: target/release/lunar.exe
+          name: salite-win64
+          path: target/release/salite.exe
 
   macos:
     runs-on: macos-latest
@@ -43,8 +43,8 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v1
         with:
-          name: lunar-macos
-          path: target/release/lunar
+          name: salite-macos
+          path: target/release/salite
 
   linux:
     runs-on: ubuntu-latest
@@ -59,5 +59,5 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v1
         with:
-          name: lunar-linux
-          path: target/release/lunar
+          name: salite-linux
+          path: target/release/salite
