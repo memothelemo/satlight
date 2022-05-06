@@ -411,11 +411,75 @@ parser_struct!(
     }
 );
 
-struct ParseNameAsParam;
-parser_struct!(ParseNameAsParam, ast::Param, |_, state: &ParseState<'a>| {
+pub struct ParseParam;
+parser_struct!(ParseParam, ast::Param, |_, state: &ParseState<'a>| {
     let (state, name) = ParseName.parse(state)?;
-    Ok((state, ast::Param::Name(name)))
+    let (state, explicit_type) =
+        if let Ok((new_state, _)) = ParseSymbol(ast::SymbolType::Colon).parse(&state) {
+            let (new_state, explicit_type) = expect!(&new_state, ParseTypeInfo, "<type>");
+            (new_state, Some(explicit_type))
+        } else {
+            (state, None)
+        };
+    let (state, default) =
+        if let Ok((new_state, _)) = ParseSymbol(ast::SymbolType::Equal).parse(&state) {
+            let (new_state, default) = expect!(&new_state, ParseExpr, "<expr>");
+            (new_state, Some(default))
+        } else {
+            (state, None)
+        };
+    #[allow(clippy::or_fun_call)]
+    Ok((
+        state,
+        ast::Param {
+            span: ast::Span::new(
+                name.span().start,
+                default
+                    .as_ref()
+                    .map(|v| v.span().end)
+                    .or(explicit_type.as_ref().map(|v| v.span().end))
+                    .unwrap_or(name.span().end),
+            ),
+            name,
+            explicit_type,
+            default,
+        },
+    ))
 });
+
+pub struct ParseVaridiacParam;
+parser_struct!(
+    ParseVaridiacParam,
+    ast::VaridiacParam,
+    |_, state: &ParseState<'a>| {
+        let (state, name) = ParseSymbol(ast::SymbolType::TripleDot).parse(state)?;
+        let (state, typ) =
+            if let Ok((new_state, _)) = ParseSymbol(ast::SymbolType::Colon).parse(&state) {
+                let (new_state, explicit_type) = expect!(&new_state, ParseTypeInfo, "<type>");
+                (new_state, Some(explicit_type))
+            } else {
+                (state, None)
+            };
+        Ok((
+            state,
+            ast::VaridiacParam::new(
+                ast::Span::new(
+                    name.span().start,
+                    typ.as_ref()
+                        .map(|v| v.span().end)
+                        .unwrap_or(name.span().end),
+                ),
+                typ,
+            ),
+        ))
+    }
+);
+
+// struct ParseNameAsParam;
+// parser_struct!(ParseNameAsParam, ast::Param, |_, state: &ParseState<'a>| {
+//     let (state, name) = ParseName.parse(state)?;
+//     Ok((state, ast::Param::Name(name)))
+// });
 
 pub struct ParseFunctionBody;
 parser_struct!(
@@ -426,20 +490,19 @@ parser_struct!(
         let start_span = open.span().start;
 
         // parse names?
-        let (mut state, mut params) =
-            ZeroOrMorePunctuated(ParseNameAsParam, ParseSymbol(ast::SymbolType::Comma))
-                .parse(&state)?;
+        let (mut state, params) =
+            ZeroOrMorePunctuated(ParseParam, ParseSymbol(ast::SymbolType::Comma)).parse(&state)?;
+        let mut varidiac = None;
+
         if let Ok((new_state, _)) = ParseSymbol(ast::SymbolType::Comma).parse(&state) {
-            if let Ok((new_state, varargs)) =
-                ParseSymbol(ast::SymbolType::TripleDot).parse(&new_state)
-            {
-                params.push(ast::Param::Varargs(varargs));
+            if let Ok(..) = ParseSymbol(ast::SymbolType::TripleDot).parse(&new_state) {
+                let (new_state, result) = ParseVaridiacParam.parse(&new_state)?;
+                varidiac = Some(result);
                 state = new_state;
             }
-        } else if let Ok((new_state, varargs)) =
-            ParseSymbol(ast::SymbolType::TripleDot).parse(&state)
-        {
-            params.push(ast::Param::Varargs(varargs));
+        } else if let Ok(..) = ParseSymbol(ast::SymbolType::TripleDot).parse(&state) {
+            let (new_state, result) = ParseVaridiacParam.parse(&state)?;
+            varidiac = Some(result);
             state = new_state;
         }
 
@@ -461,6 +524,7 @@ parser_struct!(
             ast::FunctionBody::new(
                 ast::Span::new(start_span, end_span),
                 params,
+                varidiac,
                 block,
                 return_type,
             ),

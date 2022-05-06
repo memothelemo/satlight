@@ -285,18 +285,17 @@ impl SpannedNode for Unary {
 }
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[derive(Debug, Clone, PartialEq)]
-pub enum Param {
-    Name(Token),
-    Varargs(Token),
+#[derive(Debug, Clone, PartialEq, FieldCall, CtorCall)]
+pub struct Param {
+    pub span: Span,
+    pub name: Token,
+    pub explicit_type: Option<TypeInfo>,
+    pub default: Option<Expr>,
 }
 
 impl SpannedNode for Param {
-    fn span(&self) -> Span {
-        match self {
-            Param::Name(_) => todo!(),
-            Param::Varargs(_) => todo!(),
-        }
+    fn span(&self) -> salite_location::Span {
+        self.span
     }
 }
 
@@ -304,10 +303,18 @@ pub type ParamList = Vec<Param>;
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, Clone, PartialEq, FieldCall, CtorCall)]
+pub struct VaridiacParam {
+    pub span: Span,
+    pub typ: Option<TypeInfo>,
+}
+
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, PartialEq, FieldCall, CtorCall)]
 pub struct FunctionBody {
     #[exclude]
     span: Span,
     params: ParamList,
+    varidiac: Option<VaridiacParam>,
     block: Block,
     return_type: Option<TypeInfo>,
 }

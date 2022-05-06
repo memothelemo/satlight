@@ -1,10 +1,18 @@
 #![allow(unused)]
 mod errors;
+mod expressions;
+mod normalizer;
+mod statements;
+mod typess;
+
+use expressions::*;
+use statements::*;
+use typess::*;
 
 use super::*;
 use crate::binder::Binder;
 use crate::types::Type;
-use crate::{hir, types as ctypes};
+use crate::{hir, types};
 pub use errors::*;
 use salite_ast::Span;
 use std::borrow::Borrow;
@@ -16,6 +24,18 @@ pub trait Validate<'a> {
     fn validate(&self, analyzer: &mut Analyzer<'a>) -> Result<Self::Output, AnalyzeError>;
 }
 
+impl<'a> Validate<'a> for hir::Block<'a> {
+    type Output = ();
+
+    fn validate(&self, analyzer: &mut Analyzer<'a>) -> Result<Self::Output, AnalyzeError> {
+        analyzer.expected_type = self.expected_type.clone();
+        for stmt in self.stmts.iter() {
+            stmt.validate(analyzer)?;
+        }
+        self.last_stmt.validate(analyzer)
+    }
+}
+
 #[derive(Debug)]
 pub struct Analyzer<'a> {
     binder: &'a Binder<'a>,
@@ -23,6 +43,7 @@ pub struct Analyzer<'a> {
 
     /// contemporary storage for type parameters
     type_vars: HashMap<String, Type>,
+    expected_type: Option<Type>,
 }
 
 impl<'a> Analyzer<'a> {
@@ -31,6 +52,205 @@ impl<'a> Analyzer<'a> {
         config: &'a salite_common::Config,
         file: &'a hir::File,
     ) -> Result<(), AnalyzeError> {
-        todo!()
+        let mut analyzer = Analyzer {
+            binder,
+            config,
+            type_vars: HashMap::new(),
+            expected_type: None,
+        };
+        file.block.validate(&mut analyzer)?;
+        Ok(())
+    }
+}
+
+impl<'a> Analyzer<'a> {
+    pub fn table_key_description(&self, key: &types::TableFieldKey) -> String {
+        match key {
+            types::TableFieldKey::Name(str, _) => str.to_string(),
+            types::TableFieldKey::Computed(typ) => self.type_description(typ),
+            types::TableFieldKey::None(id) => format!("[array {}]", id),
+        }
+    }
+
+    pub fn table_description(&self, tbl: &types::Table) -> String {
+        // that's very long, but the maximum of table entries is about 5?
+        let mut entry_result = Vec::new();
+        let limited_entries = tbl.entries.pick_limit(5);
+
+        if limited_entries.is_empty() {
+            return String::from("{{}}");
+        }
+
+        for (key, value) in limited_entries {
+            entry_result.push(format!(
+                "{}{}",
+                {
+                    let result = self.table_key_description(key);
+                    if result.is_empty() {
+                        String::new()
+                    } else {
+                        format!("{}: ", result)
+                    }
+                },
+                self.type_description(value)
+            ));
+        }
+
+        if let Some(ref meta) = tbl.metatable {
+            entry_result.push(self.table_description(meta));
+        }
+
+        if tbl.entries.len() > 5 {
+            entry_result.push("..".to_string());
+        }
+
+        format!("{{ {} }}", entry_result.join(", "))
+    }
+
+    pub fn type_description(&self, typ: &Type) -> String {
+        match typ {
+            Type::Ref(info) => info.name.to_string(),
+            Type::Tuple(info) => {
+                let mut result = Vec::new();
+                for typ in info.members.iter() {
+                    result.push(self.type_description(typ));
+                }
+                format!("({})", result.join(","))
+            }
+            Type::Literal(info) => match info.kind {
+                types::LiteralKind::Any => "any",
+                types::LiteralKind::Bool => "bool",
+                types::LiteralKind::Number => "number",
+                types::LiteralKind::Nil => "nil",
+                types::LiteralKind::String => "string",
+                types::LiteralKind::Unknown => "unknown",
+                types::LiteralKind::Void => "void",
+            }
+            .to_string(),
+            Type::Table(tbl) => self.table_description(tbl),
+            Type::Function(info) => {
+                let mut params = Vec::new();
+                for param in info.parameters.iter() {
+                    let name = param
+                        .name
+                        .clone()
+                        .map(|v| format!("{}: ", v))
+                        .unwrap_or(String::new());
+
+                    let typ = self.type_description(&param.typ);
+                    params.push(format!("{}{}", name, typ));
+                }
+                format!(
+                    "({}) -> {}",
+                    params.join(","),
+                    self.type_description(&info.return_type)
+                )
+            } //Type::Alias(node) => node.name.to_string(),
+        }
+    }
+
+    pub fn skip_downwards(&self, mut typ: Type) -> Type {
+        #[allow(clippy::or_fun_call)]
+        while let Type::Ref(ref node) = typ {
+            // unless it has type arguments such we need to evaluate further
+            if node.arguments.is_some() {
+                break;
+            }
+
+            // even further evaluation, it's slow but it's worth it actually
+            let symbol = self.binder.symbols.get(node.symbol).unwrap();
+            if symbol.type_parameters.is_some() {
+                break;
+            }
+
+            typ = self
+                .binder
+                .symbols
+                .get(node.symbol)
+                .unwrap()
+                .typ
+                .clone()
+                .unwrap_or(types::makers::any(typ.span()));
+        }
+        typ
+    }
+
+    pub fn solve_type_recursive(&mut self, typ: &types::Type) -> Result<Type, AnalyzeError> {
+        match typ {
+            // TODO(memothelemo): Do something with other literal types
+            Type::Literal(node) => Ok(typ.clone()),
+            Type::Ref(_) => self.solve_type_ref(typ),
+            Type::Tuple(node) => {
+                let mut solved_members = Vec::new();
+                for member in node.members.iter() {
+                    solved_members.push(self.solve_type_recursive(member)?);
+                }
+                Ok(types::Type::Tuple(types::TupleType {
+                    span: node.span,
+                    members: solved_members,
+                }))
+            }
+            Type::Table(_) => todo!(),
+            Type::Function(_) => todo!(),
+        }
+    }
+
+    pub fn solve_type_ref(&mut self, typ: &types::Type) -> Result<Type, AnalyzeError> {
+        let sample = match typ {
+            types::Type::Ref(refer) => refer,
+            _ => panic!("Expected type reference"),
+        };
+
+        // straight forward thing to do
+        if let Some(typ) = self.type_vars.get(&sample.name) {
+            return Ok(typ.clone());
+        }
+
+        // get the type parameters
+        let symbol = self.binder.symbols.get(sample.symbol).unwrap();
+
+        #[allow(clippy::or_fun_call)]
+        if symbol.type_parameters.is_none() {
+            return Ok(symbol.typ.clone().unwrap_or(types::makers::any(typ.span())));
+        }
+
+        let parameters = symbol.type_parameters.as_ref().unwrap();
+        if sample.arguments.is_none() && !parameters.is_empty() {
+            return Err(AnalyzeError::NoArguments {
+                span: typ.span(),
+                base: sample.name.to_string(),
+            });
+        }
+
+        let arguments = sample.arguments.as_ref().unwrap();
+
+        #[allow(clippy::or_fun_call)]
+        for (idx, param) in parameters.iter().enumerate() {
+            let arg = arguments.get(idx).or(param.default.as_ref());
+            let explicit_param = param
+                .explicit
+                .clone()
+                .unwrap_or(types::makers::any(param.span));
+
+            if let Some(arg) = arg {
+                self.check_lr_types(arg, &explicit_param, arg.span())?;
+                self.type_vars.insert(param.name.clone(), arg.clone());
+            } else {
+                return Err(AnalyzeError::MissingArgument {
+                    span: typ.span(),
+                    idx,
+                    base: sample.name.to_string(),
+                    expected_type: self.type_description(&explicit_param),
+                });
+            }
+        }
+
+        self.solve_type_recursive(symbol.typ.as_ref().unwrap())
+    }
+
+    pub fn solve_type(&mut self, value: &Type) -> Result<Type, AnalyzeError> {
+        let result = self.solve_type_recursive(value)?;
+        self.type_vars.clear();
+        Ok(result)
     }
 }

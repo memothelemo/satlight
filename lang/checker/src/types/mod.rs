@@ -8,6 +8,7 @@ pub mod utils;
 
 #[derive(Debug, Clone, PartialEq, Hash)]
 pub enum Type {
+    Function(FunctionType),
     Literal(LiteralType),
     Ref(RefType),
     Tuple(TupleType),
@@ -15,12 +16,31 @@ pub enum Type {
 }
 
 impl Type {
+    pub fn get_lit_type(&self) -> Option<&LiteralKind> {
+        if let Type::Literal(lit) = self {
+            Some(&lit.kind)
+        } else {
+            None
+        }
+    }
+
+    pub fn span_mut(&mut self) -> &mut Span {
+        match self {
+            Type::Literal(node) => &mut node.span,
+            Type::Ref(node) => &mut node.span,
+            Type::Tuple(node) => &mut node.span,
+            Type::Table(node) => &mut node.span,
+            Type::Function(node) => &mut node.span,
+        }
+    }
+
     pub fn span(&self) -> Span {
         match self {
             Type::Literal(node) => node.span,
             Type::Ref(node) => node.span,
             Type::Tuple(node) => node.span,
             Type::Table(node) => node.span,
+            Type::Function(node) => node.span,
         }
     }
 
@@ -40,6 +60,65 @@ impl Type {
         let mut types = Vec::new();
         self.deref_tuples_inner(&mut types);
         types
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct FunctionParameter {
+    pub span: Span,
+    pub name: Option<String>,
+    pub typ: Type,
+}
+
+impl PartialEq for FunctionParameter {
+    fn eq(&self, other: &Self) -> bool {
+        self.name == other.name && self.typ == other.typ
+    }
+}
+
+impl std::hash::Hash for FunctionParameter {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.name.hash(state);
+        self.typ.hash(state);
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct VaridiacParameter {
+    pub span: Span,
+    pub typ: Box<Type>,
+}
+
+impl PartialEq for VaridiacParameter {
+    fn eq(&self, other: &Self) -> bool {
+        self.typ == other.typ
+    }
+}
+
+impl std::hash::Hash for VaridiacParameter {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.typ.hash(state);
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct FunctionType {
+    pub span: Span,
+    pub parameters: Vec<FunctionParameter>,
+    pub varidiac_param: Option<VaridiacParameter>,
+    pub return_type: Box<Type>,
+}
+
+impl PartialEq for FunctionType {
+    fn eq(&self, other: &Self) -> bool {
+        self.parameters == other.parameters && self.return_type == other.return_type
+    }
+}
+
+impl std::hash::Hash for FunctionType {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.parameters.hash(state);
+        self.return_type.hash(state);
     }
 }
 

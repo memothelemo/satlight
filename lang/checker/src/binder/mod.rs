@@ -1,6 +1,7 @@
 use id_arena::{Arena, Id};
 
 mod ctrl_flow;
+mod diagnostics;
 mod scope;
 mod symbols;
 
@@ -13,6 +14,7 @@ use crate::{
     types::Type,
 };
 pub use ctrl_flow::*;
+pub use diagnostics::*;
 pub use scope::*;
 pub use symbols::*;
 pub use visitor::*;
@@ -20,6 +22,7 @@ pub use visitor::*;
 use salite_ast::Span;
 
 pub struct Binder<'a> {
+    pub diagnostics: Vec<Diagnostic>,
     pub nodes: Arena<&'a dyn salite_ast::Node>,
     pub scopes: Arena<Scope>,
     pub stack: Vec<Id<Scope>>,
@@ -37,15 +40,15 @@ impl<'a> std::fmt::Debug for Binder<'a> {
 }
 
 impl<'a> Binder<'a> {
-    #[allow(clippy::new_without_default)]
     pub fn new(block: &'a salite_ast::File) -> (Binder<'a>, hir::File<'a>) {
         let mut binder: Binder<'a> = Self {
+            diagnostics: Vec::new(),
             nodes: Arena::new(),
             scopes: Arena::new(),
             stack: Vec::new(),
             symbols: Arena::new(),
         };
-        binder.init_intrisnics();
+        binder.load_intrinsics();
 
         let block = binder.visit_file(block);
         let output = hir::File { block };
@@ -53,18 +56,22 @@ impl<'a> Binder<'a> {
         (binder, output)
     }
 
-    fn init_intrisnics(&mut self) {
+    pub fn diagnostics(&self) -> &Vec<Diagnostic> {
+        &self.diagnostics
+    }
+
+    pub(crate) fn load_intrinsics(&mut self) {
         use crate::types;
 
         macro_rules! lazy_declare {
 			{as type = {
 				$( $name:expr => $typ:expr, )*
 			}} => {
-				$( self.declare_type_var($name, SymbolFlags::TypeAlias, None, $typ, None); )*
+				$( self.insert_type_alias($name, SymbolFlags::TypeAlias, None, $typ, None); )*
 			};
 		}
 
-        self.push_scope(ScopeKind::Block);
+        self.push_scope(ScopeKind::Module);
 
         lazy_declare! {
             as type = {
@@ -78,38 +85,44 @@ impl<'a> Binder<'a> {
         }
     }
 
-    #[allow(unused)]
-    fn visit_file(&mut self, file: &'a salite_ast::File) -> hir::Block<'a> {
-        todo!()
-    }
-
-    pub fn register_symbol(&mut self) -> Id<Symbol> {
-        todo!()
+    pub(crate) fn register_symbol(
+        &mut self,
+        definitions: Vec<Span>,
+        flags: SymbolFlags,
+        typ: Option<Type>,
+        type_parameters: Option<Vec<TypeParameter>>,
+    ) -> Id<Symbol> {
+        self.symbols.alloc(Symbol {
+            definitions,
+            flags,
+            typ,
+            type_parameters,
+        })
     }
 }
 
 impl<'a> Binder<'a> {
-    pub fn push_scope(&mut self, kind: ScopeKind) {
+    pub(crate) fn push_scope(&mut self, kind: ScopeKind) {
         let scope = Scope::new(kind, self.stack.last().cloned());
         let scope_id = self.scopes.alloc(scope);
         self.stack.push(scope_id);
     }
 
-    pub fn pop_scope(&mut self) {
+    pub(crate) fn pop_scope(&mut self) {
         self.stack.pop();
     }
 }
 
 impl<'a> Binder<'a> {
-    pub fn current_scope_id(&self) -> Id<Scope> {
+    pub(crate) fn current_scope_id(&self) -> Id<Scope> {
         *self.stack.last().unwrap()
     }
 
-    pub fn current_scope(&self) -> &Scope {
+    pub(crate) fn current_scope(&self) -> &Scope {
         self.scopes.get(self.current_scope_id()).unwrap()
     }
 
-    pub fn current_scope_mut(&mut self) -> &mut Scope {
+    pub(crate) fn current_scope_mut(&mut self) -> &mut Scope {
         let scope_id = self.current_scope_id();
         self.scopes.get_mut(scope_id).unwrap()
     }
@@ -117,11 +130,26 @@ impl<'a> Binder<'a> {
 
 #[allow(unused)]
 impl<'a> Binder<'a> {
-    pub fn declare_var(&mut self, name: &str, flags: SymbolFlags, span: Option<Span>, typ: Type) {
-        todo!()
+    pub(crate) fn insert_variable(
+        &mut self,
+        name: &str,
+        flags: SymbolFlags,
+        span: Option<Span>,
+        typ: Type,
+    ) -> Id<Symbol> {
+        // register a new variable :)
+        let symbol_id = self.register_symbol(
+            span.map(|v| vec![v]).unwrap_or(vec![Span::invalid()]),
+            flags,
+            Some(typ),
+            None,
+        );
+        let scope = self.current_scope_mut();
+        scope.vars.insert(name.to_string(), symbol_id);
+        symbol_id
     }
 
-    pub fn declare_type_var(
+    pub(crate) fn insert_type_alias(
         &mut self,
         name: &str,
         flags: SymbolFlags,
@@ -129,6 +157,14 @@ impl<'a> Binder<'a> {
         typ: Type,
         parameters: Option<Vec<TypeParameter>>,
     ) -> Id<Symbol> {
-        todo!()
+        let symbol_id = self.register_symbol(
+            span.map(|v| vec![v]).unwrap_or(vec![Span::invalid()]),
+            flags,
+            Some(typ),
+            parameters,
+        );
+        let scope = self.current_scope_mut();
+        scope.types.insert(name.to_string(), symbol_id);
+        symbol_id
     }
 }

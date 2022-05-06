@@ -3,21 +3,22 @@ use crate::{binder::Symbol, types::Type};
 use id_arena::Id;
 use salite_ast::{Node, Span};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum LastStmt<'a> {
     None,
     Return(Return<'a>),
     Break(Span, Id<&'a dyn Node>),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Return<'a> {
+    pub concluding_typ: Type,
     pub exprs: Vec<Expr<'a>>,
     pub span: Span,
     pub node_id: Id<&'a dyn Node>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Stmt<'a> {
     LocalAssign(LocalAssign<'a>),
     TypeDeclaration(TypeDeclaration<'a>),
@@ -32,7 +33,7 @@ pub struct TypeParameter {
     pub span: Span,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct TypeDeclaration<'a> {
     pub name: String,
     pub parameters: Option<Vec<TypeParameter>>,
@@ -40,7 +41,7 @@ pub struct TypeDeclaration<'a> {
     pub node_id: Id<&'a dyn Node>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct LocalAssignVar {
     pub name: String,
     pub name_symbol: Id<Symbol>,
@@ -51,7 +52,7 @@ pub struct LocalAssignVar {
     pub expr: Option<Type>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct LocalAssign<'a> {
     pub variables: Vec<LocalAssignVar>,
     pub span: Span,

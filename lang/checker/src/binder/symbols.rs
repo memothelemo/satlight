@@ -3,7 +3,7 @@
 use bitflags::bitflags;
 use salite_ast::Span;
 
-use crate::types::Type;
+use crate::{hir::TypeParameter, types::Type};
 
 bitflags! {
     pub struct SymbolFlags: u32 {
@@ -14,6 +14,9 @@ bitflags! {
 
         const TypeAlias = 0b00001000;
         const TypeParameter = 0b00010000;
+        const UnknownVariable = 0b00100000;
+
+        const Value = 0b01000000;
     }
 }
 
@@ -21,6 +24,6 @@ bitflags! {
 pub struct Symbol {
     pub definitions: Vec<Span>,
     pub flags: SymbolFlags,
-    pub id: usize,
     pub typ: Option<Type>,
+    pub type_parameters: Option<Vec<TypeParameter>>,
 }
