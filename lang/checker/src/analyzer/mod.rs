@@ -33,8 +33,9 @@ impl<'a> Validate<'a> for hir::Block<'a> {
         for stmt in self.stmts.iter() {
             stmt.validate(analyzer)?;
         }
+        self.last_stmt.validate(analyzer)?;
         analyzer.expected_type = last_expected_type;
-        self.last_stmt.validate(analyzer)
+        Ok(())
     }
 }
 
