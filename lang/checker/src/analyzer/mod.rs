@@ -28,11 +28,13 @@ impl<'a> Validate<'a> for hir::Block<'a> {
     type Output = ();
 
     fn validate(&self, analyzer: &mut Analyzer<'a>) -> Result<Self::Output, AnalyzeError> {
+        let last_expected_type = analyzer.expected_type.clone();
         analyzer.expected_type = self.expected_type.clone();
         for stmt in self.stmts.iter() {
             stmt.validate(analyzer)?;
         }
         self.last_stmt.validate(analyzer)
+        analyzer.expected_type = last_expected_type;
     }
 }
 
