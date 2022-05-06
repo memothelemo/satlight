@@ -5,6 +5,8 @@ pub mod types;
 
 pub mod meta {
     #![allow(non_upper_case_globals)]
+
+    #[allow(unused)]
     use crate::analyzer::Validate;
 
     use super::*;
@@ -56,33 +58,12 @@ pub mod meta {
     pub struct Standard;
 
     impl Checker for Standard {
+        #[allow(unused)]
         fn check(
             analyzer: &mut analyzer::Analyzer<'_>,
             metatable: &types::Table,
         ) -> Result<(), AnalyzeError> {
-            for (key, value) in metatable.entries.iter() {
-                if let types::TableFieldKey::Name(name, span) = key {
-                    if let Some(accepted) = METAMETHODS.get(name) {
-                        // check for accepted types maybe?
-                        let mut did_accept = false;
-                        if accepted == &AcceptedType::Table
-                            && matches!(value, types::Type::Table(..))
-                        {
-                            did_accept = true;
-                        }
-                        if !did_accept {
-                            return Err(AnalyzeError::InvalidMetamethod {
-                                span: *span,
-                                metamethod: name.to_string(),
-                            });
-                        }
-                    }
-                } else if let types::TableFieldKey::Computed(ty) = key {
-                    ty.validate(analyzer)?;
-                }
-                value.validate(analyzer)?;
-            }
-            Ok(())
+            todo!()
         }
     }
 

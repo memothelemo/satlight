@@ -1,4 +1,4 @@
-use super::{Binder, ConditionFacts, Symbol};
+use super::{ConditionFacts, Symbol};
 use id_arena::Id;
 use std::collections::HashMap;
 
@@ -9,6 +9,7 @@ pub enum ScopeKind {
     TypeAliasValue,
 }
 
+#[allow(unused)]
 #[derive(Debug)]
 pub struct Scope {
     pub(crate) facts: ConditionFacts,
@@ -42,43 +43,43 @@ impl Scope {
         }
     }
 
-    pub fn depth(&self, analyzer: &Binder) -> usize {
-        let mut depth = 0;
-        let mut opt_parent = self.parent;
-        while let Some(parent) = opt_parent {
-            depth += 1;
-            opt_parent = analyzer.scopes.get(parent).unwrap().parent;
-        }
-        depth
-    }
+    // pub fn depth(&self, analyzer: &Binder) -> usize {
+    //     let mut depth = 0;
+    //     let mut opt_parent = self.parent;
+    //     while let Some(parent) = opt_parent {
+    //         depth += 1;
+    //         opt_parent = analyzer.scopes.get(parent).unwrap().parent;
+    //     }
+    //     depth
+    // }
 
-    pub fn find_symbol_type(&self, analyzer: &Binder, name: &String) -> Option<Id<Symbol>> {
-        if let Some(fact) = self.facts.types.get(name) {
-            return Some(*fact);
-        }
+    // pub fn find_symbol_type(&self, analyzer: &Binder, name: &String) -> Option<Id<Symbol>> {
+    //     if let Some(fact) = self.facts.types.get(name) {
+    //         return Some(*fact);
+    //     }
 
-        if let Some(symbol) = self.types.get(name) {
-            return Some(*symbol);
-        }
+    //     if let Some(symbol) = self.types.get(name) {
+    //         return Some(*symbol);
+    //     }
 
-        self.parent
-            .as_ref()
-            .and_then(|scope_id| analyzer.scopes.get(*scope_id))
-            .and_then(|scope| scope.find_symbol_type(analyzer, name))
-    }
+    //     self.parent
+    //         .as_ref()
+    //         .and_then(|scope_id| analyzer.scopes.get(*scope_id))
+    //         .and_then(|scope| scope.find_symbol_type(analyzer, name))
+    // }
 
-    pub fn find_symbol_var(&self, analyzer: &Binder, name: &String) -> Option<Id<Symbol>> {
-        if let Some(fact) = self.facts.vars.get(name) {
-            return Some(*fact);
-        }
+    // pub fn find_symbol_var(&self, analyzer: &Binder, name: &String) -> Option<Id<Symbol>> {
+    //     if let Some(fact) = self.facts.vars.get(name) {
+    //         return Some(*fact);
+    //     }
 
-        if let Some(symbol) = self.vars.get(name) {
-            return Some(*symbol);
-        }
+    //     if let Some(symbol) = self.vars.get(name) {
+    //         return Some(*symbol);
+    //     }
 
-        self.parent
-            .as_ref()
-            .and_then(|scope_id| analyzer.scopes.get(*scope_id))
-            .and_then(|scope| scope.find_symbol_var(analyzer, name))
-    }
+    //     self.parent
+    //         .as_ref()
+    //         .and_then(|scope_id| analyzer.scopes.get(*scope_id))
+    //         .and_then(|scope| scope.find_symbol_var(analyzer, name))
+    // }
 }

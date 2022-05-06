@@ -5,8 +5,8 @@ use std::collections::HashMap;
 
 #[derive(Debug, Default)]
 pub struct ConditionFacts {
-    pub types: HashMap<String, Id<Symbol>>,
-    pub vars: HashMap<String, Id<Symbol>>,
+    pub types: HashMap<Id<Symbol>, Id<Symbol>>,
+    pub vars: HashMap<Id<Symbol>, Id<Symbol>>,
 }
 
 impl ConditionFacts {

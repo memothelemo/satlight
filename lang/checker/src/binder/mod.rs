@@ -8,10 +8,16 @@ mod symbols;
 #[allow(clippy::or_fun_call)]
 mod visitor;
 
+use crate::{
+    hir::{self, TypeParameter},
+    types::Type,
+};
 pub use ctrl_flow::*;
 pub use scope::*;
 pub use symbols::*;
 pub use visitor::*;
+
+use salite_ast::Span;
 
 pub struct Binder<'a> {
     pub nodes: Arena<&'a dyn salite_ast::Node>,
@@ -29,12 +35,6 @@ impl<'a> std::fmt::Debug for Binder<'a> {
             .finish()
     }
 }
-
-use crate::{
-    hir::{self, TypeParameter},
-    types::Type,
-};
-use salite_ast::{AstVisitorWithLifetime, Span};
 
 impl<'a> Binder<'a> {
     #[allow(clippy::new_without_default)]
@@ -78,27 +78,13 @@ impl<'a> Binder<'a> {
         }
     }
 
+    #[allow(unused)]
     fn visit_file(&mut self, file: &'a salite_ast::File) -> hir::Block<'a> {
-        self.push_scope(ScopeKind::Block);
-        let block = self.visit_block(file.block());
-        self.pop_scope();
-        block
+        todo!()
     }
 
-    pub fn register_symbol(
-        &mut self,
-        flags: SymbolFlags,
-        span: Vec<Span>,
-        typ: Option<Type>,
-        parameters: Option<Vec<TypeParameter>>,
-    ) -> Id<Symbol> {
-        self.symbols.alloc(Symbol {
-            definitions: span,
-            flags,
-            id: self.symbols.len(),
-            typ,
-            parameters,
-        })
+    pub fn register_symbol(&mut self) -> Id<Symbol> {
+        todo!()
     }
 }
 
@@ -129,16 +115,10 @@ impl<'a> Binder<'a> {
     }
 }
 
+#[allow(unused)]
 impl<'a> Binder<'a> {
     pub fn declare_var(&mut self, name: &str, flags: SymbolFlags, span: Option<Span>, typ: Type) {
-        let symbol_id = self.register_symbol(
-            flags,
-            span.map(|v| vec![v]).unwrap_or_default(),
-            Some(typ),
-            None,
-        );
-        let scope = self.current_scope_mut();
-        scope.vars.insert(name.to_string(), symbol_id);
+        todo!()
     }
 
     pub fn declare_type_var(
@@ -149,14 +129,6 @@ impl<'a> Binder<'a> {
         typ: Type,
         parameters: Option<Vec<TypeParameter>>,
     ) -> Id<Symbol> {
-        let symbol_id = self.register_symbol(
-            flags,
-            span.map(|v| vec![v]).unwrap_or_default(),
-            Some(typ),
-            parameters,
-        );
-        let scope = self.current_scope_mut();
-        scope.types.insert(name.to_string(), symbol_id);
-        symbol_id
+        todo!()
     }
 }

@@ -3,7 +3,7 @@
 use bitflags::bitflags;
 use salite_ast::Span;
 
-use crate::{hir::TypeParameter, types::Type};
+use crate::types::Type;
 
 bitflags! {
     pub struct SymbolFlags: u32 {
@@ -23,5 +23,4 @@ pub struct Symbol {
     pub flags: SymbolFlags,
     pub id: usize,
     pub typ: Option<Type>,
-    pub parameters: Option<Vec<TypeParameter>>,
 }
