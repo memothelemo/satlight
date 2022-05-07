@@ -1,29 +1,26 @@
 use super::*;
 
-mod lifetime;
-pub use lifetime::*;
-
 pub trait ExprVisitor<'a> {
     type Output: 'a;
 
-    fn visit_bool_expr(&mut self, node: &Token) -> Self::Output;
-    fn visit_function_expr(&mut self, node: &FunctionExpr) -> Self::Output;
-    fn visit_name_expr(&mut self, node: &Token) -> Self::Output;
-    fn visit_number_expr(&mut self, node: &Token) -> Self::Output;
-    fn visit_nil_expr(&mut self, node: &Token) -> Self::Output;
-    fn visit_str_expr(&mut self, node: &Token) -> Self::Output;
-    fn visit_table_ctor_expr(&mut self, node: &TableCtor) -> Self::Output;
-    fn visit_varargs_expr(&mut self, node: &Token) -> Self::Output;
+    fn visit_bool_expr(&mut self, node: &'a Token) -> Self::Output;
+    fn visit_function_expr(&mut self, node: &'a FunctionExpr) -> Self::Output;
+    fn visit_name_expr(&mut self, node: &'a Token) -> Self::Output;
+    fn visit_number_expr(&mut self, node: &'a Token) -> Self::Output;
+    fn visit_nil_expr(&mut self, node: &'a Token) -> Self::Output;
+    fn visit_str_expr(&mut self, node: &'a Token) -> Self::Output;
+    fn visit_table_ctor_expr(&mut self, node: &'a TableCtor) -> Self::Output;
+    fn visit_varargs_expr(&mut self, node: &'a Token) -> Self::Output;
 
-    fn visit_binary_expr(&mut self, node: &Binary) -> Self::Output;
-    fn visit_paren_expr(&mut self, node: &Expr) -> Self::Output;
-    fn visit_suffixed_expr(&mut self, node: &Suffixed) -> Self::Output;
-    fn visit_type_assertion_expr(&mut self, node: &TypeAssertion) -> Self::Output;
-    fn visit_unary_expr(&mut self, node: &Unary) -> Self::Output;
+    fn visit_binary_expr(&mut self, node: &'a Binary) -> Self::Output;
+    fn visit_paren_expr(&mut self, node: &'a Expr) -> Self::Output;
+    fn visit_suffixed_expr(&mut self, node: &'a Suffixed) -> Self::Output;
+    fn visit_type_assertion_expr(&mut self, node: &'a TypeAssertion) -> Self::Output;
+    fn visit_unary_expr(&mut self, node: &'a Unary) -> Self::Output;
 
-    fn visit_suffix_kind_expr(&mut self, node: &SuffixKind) -> Self::Output;
+    fn visit_suffix_kind_expr(&mut self, node: &'a SuffixKind) -> Self::Output;
 
-    fn visit_literal_expr(&mut self, node: &Literal) -> Self::Output {
+    fn visit_literal_expr(&mut self, node: &'a Literal) -> Self::Output {
         match node {
             Literal::Bool(node) => self.visit_bool_expr(node),
             Literal::Function(node) => self.visit_function_expr(node),
@@ -36,7 +33,7 @@ pub trait ExprVisitor<'a> {
         }
     }
 
-    fn visit_expr(&mut self, node: &Expr) -> Self::Output {
+    fn visit_expr(&mut self, node: &'a Expr) -> Self::Output {
         match node {
             Expr::Binary(node) => self.visit_binary_expr(node),
             Expr::Literal(node) => self.visit_literal_expr(node),
@@ -51,15 +48,17 @@ pub trait ExprVisitor<'a> {
 pub trait TypeVisitor<'a> {
     type Output: 'a;
 
-    fn visit_type_callback(&mut self, node: &TypeCallback) -> Self::Output;
-    fn visit_type_reference(&mut self, node: &TypeReference) -> Self::Output;
-    fn visit_type_table(&mut self, node: &TypeTable) -> Self::Output;
+    fn visit_type_callback(&mut self, node: &'a TypeCallback) -> Self::Output;
+    fn visit_type_reference(&mut self, node: &'a TypeReference) -> Self::Output;
+    fn visit_type_table(&mut self, node: &'a TypeTable) -> Self::Output;
+    fn visit_type_metatable(&mut self, node: &'a TypeMetatable) -> Self::Output;
 
-    fn visit_type_info(&mut self, node: &TypeInfo) -> Self::Output {
+    fn visit_type_info(&mut self, node: &'a TypeInfo) -> Self::Output {
         match node {
             TypeInfo::Callback(node) => self.visit_type_callback(node),
             TypeInfo::Reference(node) => self.visit_type_reference(node),
             TypeInfo::Table(node) => self.visit_type_table(node),
+            TypeInfo::Metatable(node) => self.visit_type_metatable(node),
         }
     }
 }
@@ -67,20 +66,20 @@ pub trait TypeVisitor<'a> {
 pub trait StmtVisitor<'a> {
     type Output: 'a;
 
-    fn visit_call_stmt(&mut self, node: &Expr) -> Self::Output;
-    fn visit_do_stmt(&mut self, node: &DoStmt) -> Self::Output;
-    fn visit_function_assign_stmt(&mut self, node: &FunctionAssign) -> Self::Output;
-    fn visit_generic_for_stmt(&mut self, node: &GenericFor) -> Self::Output;
-    fn visit_if_stmt(&mut self, node: &IfStmt) -> Self::Output;
-    fn visit_local_assign_stmt(&mut self, node: &LocalAssign) -> Self::Output;
-    fn visit_local_function_stmt(&mut self, node: &LocalFunction) -> Self::Output;
-    fn visit_numeric_for_stmt(&mut self, node: &NumericFor) -> Self::Output;
-    fn visit_repeat_stmt(&mut self, node: &RepeatStmt) -> Self::Output;
-    fn visit_while_stmt(&mut self, node: &WhileStmt) -> Self::Output;
-    fn visit_var_assign_stmt(&mut self, node: &VarAssign) -> Self::Output;
-    fn visit_type_declaration_stmt(&mut self, node: &TypeDeclaration) -> Self::Output;
+    fn visit_call_stmt(&mut self, node: &'a Expr) -> Self::Output;
+    fn visit_do_stmt(&mut self, node: &'a DoStmt) -> Self::Output;
+    fn visit_function_assign_stmt(&mut self, node: &'a FunctionAssign) -> Self::Output;
+    fn visit_generic_for_stmt(&mut self, node: &'a GenericFor) -> Self::Output;
+    fn visit_if_stmt(&mut self, node: &'a IfStmt) -> Self::Output;
+    fn visit_local_assign_stmt(&mut self, node: &'a LocalAssign) -> Self::Output;
+    fn visit_local_function_stmt(&mut self, node: &'a LocalFunction) -> Self::Output;
+    fn visit_numeric_for_stmt(&mut self, node: &'a NumericFor) -> Self::Output;
+    fn visit_repeat_stmt(&mut self, node: &'a RepeatStmt) -> Self::Output;
+    fn visit_while_stmt(&mut self, node: &'a WhileStmt) -> Self::Output;
+    fn visit_var_assign_stmt(&mut self, node: &'a VarAssign) -> Self::Output;
+    fn visit_type_declaration_stmt(&mut self, node: &'a TypeDeclaration) -> Self::Output;
 
-    fn visit_stmt(&mut self, node: &Stmt) -> Self::Output {
+    fn visit_stmt(&mut self, node: &'a Stmt) -> Self::Output {
         match node {
             Stmt::Call(node) => self.visit_call_stmt(node),
             Stmt::Do(node) => self.visit_do_stmt(node),
@@ -102,10 +101,10 @@ pub trait StmtVisitor<'a> {
 pub trait LastStmtVisitor<'a> {
     type Output: 'a;
 
-    fn visit_break_stmt(&mut self, node: &Token) -> Self::Output;
-    fn visit_return_stmt(&mut self, node: &ReturnStmt) -> Self::Output;
+    fn visit_break_stmt(&mut self, node: &'a Token) -> Self::Output;
+    fn visit_return_stmt(&mut self, node: &'a ReturnStmt) -> Self::Output;
 
-    fn visit_last_stmt(&mut self, node: &Stmt) -> Self::Output {
+    fn visit_last_stmt(&mut self, node: &'a Stmt) -> Self::Output {
         match node {
             Stmt::Break(node) => self.visit_break_stmt(node),
             Stmt::Return(node) => self.visit_return_stmt(node),
@@ -117,5 +116,5 @@ pub trait LastStmtVisitor<'a> {
 pub trait AstVisitor<'a> {
     type BlockOutput: 'a;
 
-    fn visit_block(&mut self, node: &Block) -> Self::BlockOutput;
+    fn visit_block(&mut self, node: &'a Block) -> Self::BlockOutput;
 }

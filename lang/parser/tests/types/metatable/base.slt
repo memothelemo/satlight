@@ -1,0 +1,3 @@
+@metatable {
+	__index: () -> void,
+}

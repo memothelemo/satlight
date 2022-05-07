@@ -155,6 +155,7 @@ impl std::hash::Hash for TableFieldKey {
 
 #[derive(Debug, Clone)]
 pub struct Table {
+    pub is_metatable: bool,
     pub span: Span,
     pub entries: Dictionary<TableFieldKey, Type>,
     pub metatable: Option<Box<Table>>,

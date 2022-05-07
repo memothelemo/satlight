@@ -98,10 +98,25 @@ impl SpannedNode for TypeReference {
 }
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, PartialEq, FieldCall, CtorCall)]
+pub struct TypeMetatable {
+    #[exclude]
+    span: Span,
+    table: TypeTable,
+}
+
+impl SpannedNode for TypeMetatable {
+    fn span(&self) -> salite_location::Span {
+        self.span
+    }
+}
+
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, Clone, PartialEq)]
 pub enum TypeInfo {
     Callback(TypeCallback),
     Reference(TypeReference),
+    Metatable(TypeMetatable),
     Table(TypeTable),
 }
 
@@ -111,6 +126,7 @@ impl SpannedNode for TypeInfo {
             TypeInfo::Callback(node) => node.span(),
             TypeInfo::Reference(node) => node.span(),
             TypeInfo::Table(node) => node.span(),
+            TypeInfo::Metatable(node) => node.span(),
         }
     }
 }

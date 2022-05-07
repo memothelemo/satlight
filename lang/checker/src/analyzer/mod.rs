@@ -6,6 +6,7 @@ mod statements;
 mod typess;
 
 use expressions::*;
+use salite_common::dictionary::Dictionary;
 use statements::*;
 use typess::*;
 
@@ -178,6 +179,26 @@ impl<'a> Analyzer<'a> {
         typ
     }
 
+    pub fn solve_table_recursive(
+        &mut self,
+        node: &types::Table,
+    ) -> Result<types::Table, AnalyzeError> {
+        let mut entries = Dictionary::new();
+        for (key, value) in node.entries.iter() {
+            entries.insert(key.clone(), self.solve_type_recursive(value)?);
+        }
+        let mut metatable = None;
+        if let Some(met) = &node.metatable {
+            metatable = Some(Box::new(self.solve_table_recursive(met)?));
+        }
+        Ok(types::Table {
+            span: node.span,
+            entries,
+            is_metatable: node.is_metatable,
+            metatable,
+        })
+    }
+
     pub fn solve_type_recursive(&mut self, typ: &types::Type) -> Result<Type, AnalyzeError> {
         match typ {
             // TODO(memothelemo): Do something with other literal types
@@ -193,8 +214,30 @@ impl<'a> Analyzer<'a> {
                     members: solved_members,
                 }))
             }
-            Type::Table(_) => todo!(),
-            Type::Function(_) => todo!(),
+            Type::Table(node) => Ok(Type::Table(self.solve_table_recursive(node)?)),
+            Type::Function(node) => {
+                let mut parameters = Vec::new();
+                for param in node.parameters.iter() {
+                    parameters.push(types::FunctionParameter {
+                        span: param.span,
+                        name: param.name.clone(),
+                        typ: self.solve_type_recursive(&param.typ)?,
+                    });
+                }
+                let mut varidiac_param = None;
+                if let Some(param) = &node.varidiac_param {
+                    varidiac_param = Some(types::VaridiacParameter {
+                        span: param.span,
+                        typ: Box::new(self.solve_type_recursive(&param.typ)?),
+                    });
+                }
+                Ok(Type::Function(types::FunctionType {
+                    span: node.span,
+                    parameters,
+                    varidiac_param,
+                    return_type: Box::new(self.solve_type_recursive(&node.return_type)?),
+                }))
+            }
         }
     }
 

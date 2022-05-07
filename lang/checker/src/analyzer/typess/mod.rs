@@ -8,6 +8,16 @@ impl<'a> Validate<'a> for types::Type {
 
     fn validate(&self, analyzer: &mut Analyzer<'a>) -> Result<Self::Output, AnalyzeError> {
         match self {
+            Type::Function(node) => {
+                for param in node.parameters.iter() {
+                    param.typ.validate(analyzer)?;
+                }
+                if let Some(param) = &node.varidiac_param {
+                    param.typ.validate(analyzer)?;
+                }
+                node.return_type.validate(analyzer)?;
+                Ok(())
+            }
             Type::Table(tbl) => {
                 for (key, value) in tbl.entries.iter() {
                     if let types::TableFieldKey::Computed(ref expr) = key {

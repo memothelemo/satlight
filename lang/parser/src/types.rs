@@ -24,18 +24,21 @@ parser_struct!(ParseTypeInfo, ast::TypeInfo, |_, state: &ParseState<'a>| {
         ParseTypeCallback => ast::TypeInfo::Callback,
         ParseTypeReference => ast::TypeInfo::Reference,
         ParseTypeTable => ast::TypeInfo::Table,
+        ParseTypeMetatable => ast::TypeInfo::Metatable,
     })
 });
 
-pub struct ParseTypeTableFieldNamed;
+pub struct ParseTypeMetatable;
 parser_struct!(
-    ParseTypeTableFieldNamed,
-    ast::Token,
+    ParseTypeMetatable,
+    ast::TypeMetatable,
     |_, state: &ParseState<'a>| {
-        parse_either!(state, {
-            ParseSymbol(ast::SymbolType::MetatableTag) => |e| e,
-            ParseName => |e| e,
-        })
+        let (state, start) = ParseSymbol(ast::SymbolType::MetatableTag).parse(state)?;
+        let (state, table) = expect!(&state, ParseTypeTable, "<table>");
+        Ok((
+            state,
+            ast::TypeMetatable::new(ast::Span::new(start.span().start, table.span().end), table),
+        ))
     }
 );
 
@@ -58,7 +61,7 @@ parser_struct!(
                     value,
                 },
             ));
-        } else if let Ok((new_state, index)) = ParseTypeTableFieldNamed.parse(state) {
+        } else if let Ok((new_state, index)) = ParseName.parse(state) {
             let start_span = index.span().start;
             if let Ok((new_state, _)) = ParseSymbol(ast::SymbolType::Colon).parse(&new_state) {
                 let (new_state, value) = expect!(&new_state, ParseTypeInfo, "<type>");

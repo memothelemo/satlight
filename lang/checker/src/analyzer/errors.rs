@@ -20,7 +20,10 @@ pub enum AnalyzeError {
         expected: String,
     },
 
-    #[error("{metamethod} is used but it is not valid")]
+    #[error("Invalid metatable, did you forget to put @metatable before the table type?")]
+    InvalidMetatable { span: Span },
+
+    #[error("{metamethod} is used but it is invalid")]
     InvalidMetamethod { span: Span, metamethod: String },
 
     #[error("{variable} is not defined but it has explicit type of {explicit_type}")]
@@ -68,6 +71,7 @@ impl AnalyzeError {
             AnalyzeError::MissingField { span, .. } => *span,
             AnalyzeError::InvalidField { span, .. } => *span,
             AnalyzeError::ExcessiveField { span, .. } => *span,
+            AnalyzeError::InvalidMetatable { span } => *span,
         }
     }
 }

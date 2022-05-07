@@ -1,4 +1,5 @@
 use id_arena::{Arena, Id};
+use salite_common::dictionary::Dictionary;
 
 mod ctrl_flow;
 mod diagnostics;
@@ -27,6 +28,7 @@ pub struct Binder<'a> {
     pub scopes: Arena<Scope>,
     pub stack: Vec<Id<Scope>>,
     pub symbols: Arena<Symbol>,
+    pub var_globals: Dictionary<String, Id<Symbol>>,
 }
 
 impl<'a> std::fmt::Debug for Binder<'a> {
@@ -43,6 +45,7 @@ impl<'a> Binder<'a> {
     pub fn new(block: &'a salite_ast::File) -> (Binder<'a>, hir::File<'a>) {
         let mut binder: Binder<'a> = Self {
             diagnostics: Vec::new(),
+            var_globals: Dictionary::new(),
             nodes: Arena::new(),
             scopes: Arena::new(),
             stack: Vec::new(),
@@ -83,6 +86,47 @@ impl<'a> Binder<'a> {
                 "void" => types::makers::void(Span::invalid()),
             }
         }
+
+        macro_rules! any_table {
+            () => {
+                Type::Table(types::Table {
+                    is_metatable: false,
+                    span: Span::invalid(),
+                    entries: {
+                        let mut dictionary = Dictionary::new();
+                        dictionary.insert(
+                            types::TableFieldKey::Computed(types::makers::any(Span::invalid())),
+                            types::makers::any(Span::invalid()),
+                        );
+                        dictionary
+                    },
+                    metatable: None,
+                })
+            };
+        }
+
+        self.insert_variable(
+            "setmetatable",
+            SymbolFlags::Intrinsic,
+            Some(Span::invalid()),
+            Type::Function(types::FunctionType {
+                span: Span::invalid(),
+                parameters: vec![
+                    types::FunctionParameter {
+                        span: Span::invalid(),
+                        name: Some("table".to_string()),
+                        typ: any_table!(),
+                    },
+                    types::FunctionParameter {
+                        span: Span::invalid(),
+                        name: Some("metatable".to_string()),
+                        typ: any_table!(),
+                    },
+                ],
+                varidiac_param: None,
+                return_type: Box::new(types::makers::void(Span::invalid())),
+            }),
+        );
     }
 
     pub(crate) fn register_symbol(

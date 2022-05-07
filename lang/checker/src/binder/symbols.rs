@@ -16,7 +16,7 @@ bitflags! {
         const TypeParameter = 0b00010000;
         const UnknownVariable = 0b00100000;
 
-        const Value = 0b01000000;
+        const Intrinsic = 0b01000000;
     }
 }
 

@@ -6,6 +6,56 @@ use salite_common::dictionary::Dictionary;
 use std::borrow::Borrow;
 
 impl<'a> Binder<'a> {
+    pub(crate) fn visit_type_table_inner(
+        &mut self,
+        node: &'a ast::TypeTable,
+        is_metatable: bool,
+    ) -> Type {
+        let mut entries = Dictionary::new();
+        let mut metatable = None;
+        let mut array_member_count = 0;
+        for field in node.fields().iter() {
+            match field {
+                ast::TypeTableField::Computed { span, key, value } => {
+                    let key = self.visit_type_info(key);
+                    let value = self.visit_type_info(value);
+                    entries.insert(types::TableFieldKey::Computed(key), value);
+                }
+                ast::TypeTableField::Named { span, name, value } => {
+                    let real_name = name.ty().as_name();
+                    let value = self.visit_type_info(value);
+                    if &real_name == "@metatable" {
+                        if metatable.is_none() {
+                            let table = types::Table {
+                                span: value.span(),
+                                entries: Dictionary::new(),
+                                metatable: None,
+                                is_metatable,
+                            };
+                            metatable = Some(Box::new(table));
+                        } else {
+                            self.diagnostics
+                                .push(Diagnostic::DuplicatedMetatable { span: *span });
+                        }
+                    } else {
+                        entries.insert(types::TableFieldKey::Name(real_name, *span), value);
+                    }
+                }
+                ast::TypeTableField::Array(value) => {
+                    array_member_count += 1;
+                    let value = self.visit_type_info(value);
+                    entries.insert(types::TableFieldKey::None(array_member_count), value);
+                }
+            }
+        }
+        types::Type::Table(types::Table {
+            span: node.span(),
+            entries,
+            is_metatable,
+            metatable,
+        })
+    }
+
     pub(crate) fn combine_return_types(&mut self, typ: Type) {
         // We need to find a scope that is a:
         // - Module scope
@@ -132,10 +182,7 @@ impl<'a> Binder<'a> {
     }
 }
 
-use salite_ast::{
-    AstVisitorWithLifetime as AstVisitor, ExprVisitorWithLifetime as ExprVisitor,
-    LastStmtVisitorWithLifetime as LastStmt, StmtVisitorWithLifetime as StmtVisitor, TypeVisitor,
-};
+use salite_ast::{AstVisitor, ExprVisitor, LastStmtVisitor, StmtVisitor, TypeVisitor};
 
 /// Attempts to unwrap the symbol's type and warns
 /// depending on the compiler flag.
@@ -157,7 +204,7 @@ pub fn unwrap_symbol_type(symbol: &Symbol) -> &Type {
 impl<'a> TypeVisitor<'a> for Binder<'a> {
     type Output = Type;
 
-    fn visit_type_callback(&mut self, node: &ast::TypeCallback) -> Self::Output {
+    fn visit_type_callback(&mut self, node: &'a ast::TypeCallback) -> Self::Output {
         let mut parameters = Vec::new();
         let mut varidiac_param = None;
         let mut varidiac_span = None;
@@ -200,7 +247,7 @@ impl<'a> TypeVisitor<'a> for Binder<'a> {
         })
     }
 
-    fn visit_type_reference(&mut self, node: &ast::TypeReference) -> Self::Output {
+    fn visit_type_reference(&mut self, node: &'a ast::TypeReference) -> Self::Output {
         let scope = self.current_scope();
         let name = node.name().ty().as_name();
 
@@ -229,48 +276,12 @@ impl<'a> TypeVisitor<'a> for Binder<'a> {
         }
     }
 
-    fn visit_type_table(&mut self, node: &ast::TypeTable) -> Self::Output {
-        let mut entries = Dictionary::new();
-        let mut metatable = None;
-        let mut array_member_count = 0;
-        for field in node.fields().iter() {
-            match field {
-                ast::TypeTableField::Computed { span, key, value } => {
-                    let key = self.visit_type_info(key);
-                    let value = self.visit_type_info(value);
-                    entries.insert(types::TableFieldKey::Computed(key), value);
-                }
-                ast::TypeTableField::Named { span, name, value } => {
-                    let real_name = name.ty().as_name();
-                    let value = self.visit_type_info(value);
-                    if &real_name == "@metatable" {
-                        if metatable.is_none() {
-                            let table = types::Table {
-                                span: value.span(),
-                                entries: Dictionary::new(),
-                                metatable: None,
-                            };
-                            metatable = Some(Box::new(table));
-                        } else {
-                            self.diagnostics
-                                .push(Diagnostic::DuplicatedMetatable { span: *span });
-                        }
-                    } else {
-                        entries.insert(types::TableFieldKey::Name(real_name, *span), value);
-                    }
-                }
-                ast::TypeTableField::Array(value) => {
-                    array_member_count += 1;
-                    let value = self.visit_type_info(value);
-                    entries.insert(types::TableFieldKey::None(array_member_count), value);
-                }
-            }
-        }
-        types::Type::Table(types::Table {
-            span: node.span(),
-            entries,
-            metatable,
-        })
+    fn visit_type_table(&mut self, node: &'a ast::TypeTable) -> Self::Output {
+        self.visit_type_table_inner(node, false)
+    }
+
+    fn visit_type_metatable(&mut self, node: &'a ast::TypeMetatable) -> Self::Output {
+        self.visit_type_table_inner(node.table(), true)
     }
 }
 
@@ -344,6 +355,7 @@ impl<'a> ExprVisitor<'a> for Binder<'a> {
         let typ = types::Type::Table(types::Table {
             span: node.span(),
             entries,
+            is_metatable: false,
             metatable: None,
         });
         hir::Expr::Table(hir::Table {
