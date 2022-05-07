@@ -7,5 +7,8 @@ test:
 	echo Testing all crates
 	$(foreach file, $(CARGO_MANIFESTS), $(TEST_PROV) $(TEST_PROV_ARGS) $(file);)
 
+test-parser:
+	$(TEST_PROV) $(TEST_PROV_ARGS) ./lang/parser/Cargo.toml
+
 test-checker:
 	$(TEST_PROV) $(TEST_PROV_ARGS) ./lang/checker/Cargo.toml

@@ -1,0 +1,3 @@
+type A = (a: string, b: number) -> void
+local a: A = function(a: number)
+end

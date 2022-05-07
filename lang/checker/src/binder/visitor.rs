@@ -119,6 +119,7 @@ impl<'a> Binder<'a> {
             );
 
             parameters.push(types::FunctionParameter {
+                optional: param.optional,
                 span: param.span,
                 name: Some(name),
                 typ,
@@ -141,6 +142,7 @@ impl<'a> Binder<'a> {
             });
         }
 
+        let block = self.visit_block(body.block());
         let expr = hir::Function {
             span,
             defaults,
@@ -148,9 +150,9 @@ impl<'a> Binder<'a> {
                 span,
                 parameters,
                 varidiac_param,
-                return_type: Box::new(expected_type.unwrap_or(types::makers::void(span))),
+                return_type: Box::new(expected_type.unwrap_or(block.actual_type.clone())),
             }),
-            block: self.visit_block(body.block()),
+            block,
             node_id: allocated_id,
         };
 
@@ -206,38 +208,20 @@ impl<'a> TypeVisitor<'a> for Binder<'a> {
 
     fn visit_type_callback(&mut self, node: &'a ast::TypeCallback) -> Self::Output {
         let mut parameters = Vec::new();
-        let mut varidiac_param = None;
-        let mut varidiac_span = None;
-
         for type_param in node.parameters().iter() {
-            // very long statement...
-            if let Some(token) = type_param.name() {
-                match token.ty() {
-                    ast::TokenType::Symbol(ast::SymbolType::TripleDot) => {
-                        varidiac_param =
-                            Some(Box::new(self.visit_type_info(type_param.type_info())));
-                        varidiac_span = Some(token.span());
-                    }
-                    ast::TokenType::Identifier(str) => {
-                        let typ = self.visit_type_info(type_param.type_info());
-                        parameters.push(types::FunctionParameter {
-                            span: type_param.span(),
-                            name: Some(str.to_string()),
-                            typ,
-                        });
-                    }
-                    _ => unreachable!(),
+            match type_param.name().ty() {
+                ast::TokenType::Identifier(str) => {
+                    let typ = self.visit_type_info(type_param.type_info());
+                    parameters.push(types::FunctionParameter {
+                        optional: false,
+                        span: type_param.span(),
+                        name: Some(str.to_string()),
+                        typ,
+                    });
                 }
-            } else {
-                let typ = self.visit_type_info(type_param.type_info());
-                parameters.push(types::FunctionParameter {
-                    span: type_param.span(),
-                    name: None,
-                    typ,
-                });
+                _ => unreachable!(),
             }
         }
-
         Type::Function(types::FunctionType {
             span: node.span(),
             parameters,
@@ -283,6 +267,27 @@ impl<'a> TypeVisitor<'a> for Binder<'a> {
     fn visit_type_metatable(&mut self, node: &'a ast::TypeMetatable) -> Self::Output {
         self.visit_type_table_inner(node.table(), true)
     }
+
+    fn visit_type_tuple(&mut self, node: &'a ast::TypeTuple) -> Self::Output {
+        let mut members = Vec::new();
+        for member in node.members().iter() {
+            members.push(self.visit_type_info(member));
+        }
+        Type::Tuple(types::TupleType {
+            span: node.span(),
+            members,
+        })
+    }
+}
+
+macro_rules! literal_macro {
+    ($self:expr, $typ:expr, $node:expr, $base:expr) => {
+        hir::Expr::Literal(hir::Literal {
+            span: $node.span(),
+            typ: $typ,
+            node_id: $self.nodes.alloc($base),
+        })
+    };
 }
 
 impl<'a> ExprVisitor<'a> for Binder<'a> {
@@ -379,7 +384,38 @@ impl<'a> ExprVisitor<'a> for Binder<'a> {
     }
 
     fn visit_suffixed_expr(&mut self, node: &'a ast::Suffixed) -> Self::Output {
-        todo!()
+        match node.suffix() {
+            ast::SuffixKind::Call(args) => {
+                let mut arguments = Vec::new();
+                let base = self.visit_expr(node.base().borrow());
+
+                match args {
+                    ast::Args::ExprList(list) => {
+                        for expr in list.iter() {
+                            arguments.push(self.visit_expr(expr));
+                        }
+                    }
+                    ast::Args::Table(arg) => {
+                        arguments.push(self.visit_table_ctor_expr(arg));
+                    }
+                    ast::Args::Str(arg) => arguments.push(literal_macro!(
+                        self,
+                        types::makers::string(node.span()),
+                        arg,
+                        node
+                    )),
+                };
+
+                hir::Expr::Call(hir::Call {
+                    span: node.span(),
+                    base: Box::new(base),
+                    arguments,
+                })
+            }
+            ast::SuffixKind::Computed(_) => todo!(),
+            ast::SuffixKind::Method(_) => todo!(),
+            ast::SuffixKind::Name(_) => todo!(),
+        }
     }
 
     fn visit_type_assertion_expr(&mut self, node: &'a ast::TypeAssertion) -> Self::Output {
@@ -401,18 +437,9 @@ impl<'a> ExprVisitor<'a> for Binder<'a> {
     }
 
     fn visit_literal_expr(&mut self, base: &'a ast::Literal) -> Self::Output {
-        macro_rules! literal_macro {
-            ($typ:expr, $node:expr, $base:expr) => {
-                hir::Expr::Literal(hir::Literal {
-                    span: $node.span(),
-                    typ: $typ,
-                    node_id: self.nodes.alloc($base),
-                })
-            };
-        }
         match base {
             ast::Literal::Bool(node) => {
-                literal_macro!(types::makers::bool(node.span()), node, base)
+                literal_macro!(self, types::makers::bool(node.span()), node, base)
             }
             ast::Literal::Function(node) => self.visit_function_expr(node),
             ast::Literal::Name(node) => {
@@ -441,13 +468,13 @@ impl<'a> ExprVisitor<'a> for Binder<'a> {
                 }
             }
             ast::Literal::Number(node) => {
-                literal_macro!(types::makers::number(node.span()), node, base)
+                literal_macro!(self, types::makers::number(node.span()), node, base)
             }
             ast::Literal::Nil(node) => {
-                literal_macro!(types::makers::nil(node.span()), node, base)
+                literal_macro!(self, types::makers::nil(node.span()), node, base)
             }
             ast::Literal::Str(node) => {
-                literal_macro!(types::makers::string(node.span()), node, base)
+                literal_macro!(self, types::makers::string(node.span()), node, base)
             }
             ast::Literal::Table(node) => self.visit_table_ctor_expr(node),
             ast::Literal::Varargs(node) => self.visit_varargs_expr(node),
@@ -459,7 +486,10 @@ impl<'a> StmtVisitor<'a> for Binder<'a> {
     type Output = hir::Stmt<'a>;
 
     fn visit_call_stmt(&mut self, node: &'a ast::Expr) -> Self::Output {
-        todo!()
+        hir::Stmt::Call(match self.visit_expr(node) {
+            hir::Expr::Call(n) => n,
+            _ => unreachable!(),
+        })
     }
 
     fn visit_do_stmt(&mut self, node: &'a ast::DoStmt) -> Self::Output {
@@ -500,11 +530,11 @@ impl<'a> StmtVisitor<'a> for Binder<'a> {
                 .map(|v| (Some(v.0), Some(v.1)))
                 .unwrap_or((None, None));
 
-            let symbol_id = self.register_symbol(
-                vec![name.span()],
+            let symbol_id = self.insert_variable(
+                &real_name,
                 SymbolFlags::BlockVariable,
-                expr.clone().or(Some(types::makers::any(name.span()))),
-                None,
+                Some(name.span()),
+                expr.clone().unwrap_or(types::makers::any(name.span())),
             );
 
             let explicit_type = name.type_info().as_ref().map(|v| self.visit_type_info(v));

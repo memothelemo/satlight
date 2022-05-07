@@ -25,8 +25,29 @@ parser_struct!(ParseTypeInfo, ast::TypeInfo, |_, state: &ParseState<'a>| {
         ParseTypeReference => ast::TypeInfo::Reference,
         ParseTypeTable => ast::TypeInfo::Table,
         ParseTypeMetatable => ast::TypeInfo::Metatable,
+        ParseTypeTuple => ast::TypeInfo::Tuple,
     })
 });
+
+pub struct ParseTypeTuple;
+parser_struct!(
+    ParseTypeTuple,
+    ast::TypeTuple,
+    |_, state: &ParseState<'a>| {
+        let (state, start_token) = ParseSymbol(ast::SymbolType::OpenParen).parse(state)?;
+        let (state, members) =
+            ZeroOrMorePunctuated(ParseTypeInfo, ParseSymbol(ast::SymbolType::Comma))
+                .parse(&state)?;
+        let (state, end) = expect!(&state, ParseSymbol(ast::SymbolType::CloseParen), ")");
+        Ok((
+            state,
+            ast::TypeTuple::new(
+                ast::Span::new(start_token.span().start, end.span().end),
+                members,
+            ),
+        ))
+    }
+);
 
 pub struct ParseTypeMetatable;
 parser_struct!(
@@ -157,24 +178,21 @@ parser_struct!(
     ParseTypeCallbackParameter,
     ast::TypeCallbackParameter,
     |_, state: &ParseState<'a>| {
-        // check <name> `:`
-        if let Ok((new_state, name)) = ParseName.parse(state) {
-            if let Ok((new_state, _)) = ParseSymbol(ast::SymbolType::Colon).parse(&new_state) {
-                let (new_state, type_info) = expect!(&new_state, ParseTypeInfo, "<type>");
-                return Ok((
-                    new_state,
-                    ast::TypeCallbackParameter::new(
-                        ast::Span::new(name.span().start, type_info.span().end),
-                        Some(name),
-                        type_info,
-                    ),
-                ));
-            }
-        }
-        let (state, type_info) = ParseTypeInfo.parse(state)?;
+        // <name> [ `?` ] `:` <type>
+        let (state, name) = ParseName.parse(state)?;
+        let (state, optional) = optional!(&state, ParseSymbol(ast::SymbolType::Question));
+        let optional = optional.is_some();
+
+        // lol, is it going to work?
+        let (state, type_info) = ParseParamTypePart.parse(&state)?;
         Ok((
             state,
-            ast::TypeCallbackParameter::new(type_info.span(), None, type_info),
+            ast::TypeCallbackParameter::new(
+                ast::Span::new(name.span().start, type_info.span().end),
+                name,
+                optional,
+                type_info,
+            ),
         ))
     }
 );
@@ -190,7 +208,7 @@ parser_struct!(
             ParseSymbol(ast::SymbolType::Comma),
         )
         .parse(&state)?;
-        let (state, _) = expect!(&state, ParseSymbol(ast::SymbolType::CloseParen), ")");
+        let (state, _) = ParseSymbol(ast::SymbolType::CloseParen).parse(&state)?;
         let (state, _) = ParseSymbol(ast::SymbolType::SkinnyArrow).parse(&state)?;
         let (state, return_type) = expect!(&state, ParseTypeInfo, "<type>");
         Ok((

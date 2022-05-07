@@ -411,16 +411,20 @@ parser_struct!(
     }
 );
 
+pub struct ParseParamTypePart;
+#[rustfmt::skip]
+parser_struct!(ParseParamTypePart, ast::TypeInfo, |_, state: &ParseState<'a>| {
+    let (state, _) = ParseSymbol(ast::SymbolType::Colon).parse(state)?;
+    let (state, explicit_type) = expect!(&state, ParseTypeInfo, "<type>");
+    Ok((state, explicit_type))
+});
+
 pub struct ParseParam;
 parser_struct!(ParseParam, ast::Param, |_, state: &ParseState<'a>| {
     let (state, name) = ParseName.parse(state)?;
-    let (state, explicit_type) =
-        if let Ok((new_state, _)) = ParseSymbol(ast::SymbolType::Colon).parse(&state) {
-            let (new_state, explicit_type) = expect!(&new_state, ParseTypeInfo, "<type>");
-            (new_state, Some(explicit_type))
-        } else {
-            (state, None)
-        };
+    let (state, optional) = optional!(&state, ParseSymbol(ast::SymbolType::Question));
+    let optional = optional.is_some();
+    let (state, explicit_type) = optional!(&state, ParseParamTypePart);
     let (state, default) =
         if let Ok((new_state, _)) = ParseSymbol(ast::SymbolType::Equal).parse(&state) {
             let (new_state, default) = expect!(&new_state, ParseExpr, "<expr>");
@@ -432,6 +436,7 @@ parser_struct!(ParseParam, ast::Param, |_, state: &ParseState<'a>| {
     Ok((
         state,
         ast::Param {
+            optional,
             span: ast::Span::new(
                 name.span().start,
                 default

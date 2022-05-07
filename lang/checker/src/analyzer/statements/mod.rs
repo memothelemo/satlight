@@ -15,6 +15,7 @@ impl<'a> Validate<'a> for hir::Stmt<'a> {
         match self {
             hir::Stmt::LocalAssign(node) => node.validate(analyzer),
             hir::Stmt::TypeDeclaration(node) => node.validate(analyzer),
+            hir::Stmt::Call(node) => node.validate(analyzer),
         }
     }
 }

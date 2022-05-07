@@ -1,1 +1,1 @@
-(name: string, number) -> void
+(name: string, cool: number) -> void

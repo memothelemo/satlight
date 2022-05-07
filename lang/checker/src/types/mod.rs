@@ -67,6 +67,7 @@ impl Type {
 pub struct FunctionParameter {
     pub span: Span,
     pub name: Option<String>,
+    pub optional: bool,
     pub typ: Type,
 }
 

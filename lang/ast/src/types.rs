@@ -6,6 +6,20 @@ use salite_macros::{CtorCall, FieldCall};
 use salite_traits::SpannedNode;
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, PartialEq, FieldCall, CtorCall)]
+pub struct TypeTuple {
+    #[exclude]
+    span: Span,
+    members: Vec<TypeInfo>,
+}
+
+impl SpannedNode for TypeTuple {
+    fn span(&self) -> Span {
+        self.span
+    }
+}
+
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, Clone, PartialEq)]
 pub enum TypeTableField {
     Computed {
@@ -56,7 +70,8 @@ impl SpannedNode for TypeParameter {
 pub struct TypeCallbackParameter {
     #[exclude]
     span: Span,
-    name: Option<Token>,
+    name: Token,
+    optional: bool,
     type_info: TypeInfo,
 }
 
@@ -118,6 +133,7 @@ pub enum TypeInfo {
     Reference(TypeReference),
     Metatable(TypeMetatable),
     Table(TypeTable),
+    Tuple(TypeTuple),
 }
 
 impl SpannedNode for TypeInfo {
@@ -127,6 +143,7 @@ impl SpannedNode for TypeInfo {
             TypeInfo::Reference(node) => node.span(),
             TypeInfo::Table(node) => node.span(),
             TypeInfo::Metatable(node) => node.span(),
+            TypeInfo::Tuple(node) => node.span(),
         }
     }
 }

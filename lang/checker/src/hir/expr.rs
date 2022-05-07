@@ -2,9 +2,11 @@ use super::*;
 use crate::types::Type;
 use id_arena::Id;
 use salite_ast::{Node, Span};
+use std::borrow::Borrow;
 
 #[derive(Debug, Clone)]
 pub enum Expr<'a> {
+    Call(Call<'a>),
     Function(Function<'a>),
     Literal(Literal<'a>),
     TypeAssertion(TypeAssertion<'a>),
@@ -14,6 +16,10 @@ pub enum Expr<'a> {
 impl<'a> Expr<'a> {
     pub fn typ(&self) -> &Type {
         match self {
+            Expr::Call(node) => match node.base.typ() {
+                Type::Function(n) => n.return_type.borrow(),
+                _ => node.base.typ(),
+            },
             Expr::Function(node) => &node.typ,
             Expr::Literal(node) => &node.typ,
             Expr::TypeAssertion(node) => &node.cast,
@@ -27,8 +33,16 @@ impl<'a> Expr<'a> {
             Expr::Literal(node) => node.span,
             Expr::TypeAssertion(node) => node.span,
             Expr::Table(node) => node.span,
+            Expr::Call(node) => node.span,
         }
     }
+}
+
+#[derive(Debug, Clone)]
+pub struct Call<'a> {
+    pub span: Span,
+    pub base: Box<Expr<'a>>,
+    pub arguments: Vec<Expr<'a>>,
 }
 
 #[derive(Debug, Clone)]

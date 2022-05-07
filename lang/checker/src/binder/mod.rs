@@ -113,11 +113,13 @@ impl<'a> Binder<'a> {
                 span: Span::invalid(),
                 parameters: vec![
                     types::FunctionParameter {
+                        optional: false,
                         span: Span::invalid(),
                         name: Some("table".to_string()),
                         typ: any_table!(),
                     },
                     types::FunctionParameter {
+                        optional: false,
                         span: Span::invalid(),
                         name: Some("metatable".to_string()),
                         typ: any_table!(),

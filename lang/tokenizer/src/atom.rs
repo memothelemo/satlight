@@ -212,6 +212,9 @@ pub enum Atom {
     #[token("->")]
     SkinnyArrow,
 
+	#[token("?")]
+	Question,
+
     #[regex("@metatable")]
     MetatableTag,
 

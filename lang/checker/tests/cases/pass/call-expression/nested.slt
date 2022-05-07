@@ -1,0 +1,6 @@
+local callback = function() -> () -> string
+	return function()
+		return "Hi"
+	end
+end
+local value: string = callback()()

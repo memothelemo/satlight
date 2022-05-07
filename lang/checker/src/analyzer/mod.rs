@@ -219,6 +219,7 @@ impl<'a> Analyzer<'a> {
                 let mut parameters = Vec::new();
                 for param in node.parameters.iter() {
                     parameters.push(types::FunctionParameter {
+                        optional: param.optional,
                         span: param.span,
                         name: param.name.clone(),
                         typ: self.solve_type_recursive(&param.typ)?,
@@ -282,10 +283,9 @@ impl<'a> Analyzer<'a> {
                 self.check_lr_types(arg, &explicit_param, arg.span())?;
                 self.type_vars.insert(param.name.clone(), arg.clone());
             } else {
-                return Err(AnalyzeError::MissingArgument {
+                return Err(AnalyzeError::MissingTypeArgument {
                     span: typ.span(),
-                    idx,
-                    base: sample.name.to_string(),
+                    idx: idx + 1,
                     expected_type: self.type_description(&explicit_param),
                 });
             }

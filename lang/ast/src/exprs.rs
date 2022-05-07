@@ -289,6 +289,7 @@ impl SpannedNode for Unary {
 pub struct Param {
     pub span: Span,
     pub name: Token,
+    pub optional: bool,
     pub explicit_type: Option<TypeInfo>,
     pub default: Option<Expr>,
 }

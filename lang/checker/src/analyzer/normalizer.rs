@@ -98,6 +98,27 @@ impl<'a> Analyzer<'a> {
         let left = self.skip_downwards(left.clone());
         let right = self.skip_downwards(right.clone());
         match (&left, &right) {
+            (Type::Function(a), Type::Function(b)) => {
+                for (idx, param) in a.parameters.iter().enumerate() {
+                    let expected = match b.parameters.get(idx) {
+                        Some(ty) => &ty.typ,
+                        None => {
+                            return Err(AnalyzeError::ExcessiveParameter {
+                                span: param.span,
+                                key: idx + 1,
+                            })
+                        }
+                    };
+                    self.check_lr_types(&param.typ, expected, span)?;
+                }
+                match (&a.varidiac_param, &b.varidiac_param) {
+                    (None, None | Some(_)) => {}
+                    (Some(_), None) => return Err(AnalyzeError::ExcessiveVarargParam { span }),
+                    (Some(a), Some(b)) => self.check_lr_types(&a.typ, &b.typ, span)?,
+                };
+                self.check_lr_types(&a.return_type, &b.return_type, span)
+            }
+
             (Type::Table(left), Type::Table(right)) => self.check_table(left, right, span),
 
             (_, Type::Literal(l)) if matches!(l.kind, LiteralKind::Any | LiteralKind::Unknown) => {

@@ -86,6 +86,7 @@ symbols! {
         Hash => "#",
 
         MetatableTag => "@metatable",
+        Question => "?",
     }
 }
 

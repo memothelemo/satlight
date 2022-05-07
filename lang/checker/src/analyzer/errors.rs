@@ -3,6 +3,15 @@ use thiserror::Error;
 
 #[derive(Debug, Clone, PartialEq, Error)]
 pub enum AnalyzeError {
+    #[error("Attempt to call with a non-call value or expression")]
+    NonCallExpression { span: Span },
+
+    #[error("Excessive varidiac parameter")]
+    ExcessiveVarargParam { span: Span },
+
+    #[error("Excessive parameter #{key}")]
+    ExcessiveParameter { span: Span, key: usize },
+
     #[error("Excessive field {key}")]
     ExcessiveField { span: Span, key: String },
 
@@ -46,11 +55,17 @@ pub enum AnalyzeError {
     #[error("{base} expected type arguments")]
     NoArguments { span: Span, base: String },
 
-    #[error("Expected argument #{idx} in {base} as {expected_type}")]
+    #[error("Missing type argument #{idx} as {expected_type}")]
+    MissingTypeArgument {
+        span: Span,
+        idx: usize,
+        expected_type: String,
+    },
+
+    #[error("Missing argument #{idx} as {expected_type}")]
     MissingArgument {
         span: Span,
         idx: usize,
-        base: String,
         expected_type: String,
     },
 
@@ -72,6 +87,10 @@ impl AnalyzeError {
             AnalyzeError::InvalidField { span, .. } => *span,
             AnalyzeError::ExcessiveField { span, .. } => *span,
             AnalyzeError::InvalidMetatable { span } => *span,
+            AnalyzeError::NonCallExpression { span } => *span,
+            AnalyzeError::MissingTypeArgument { span, .. } => *span,
+            AnalyzeError::ExcessiveParameter { span, .. } => *span,
+            AnalyzeError::ExcessiveVarargParam { span, .. } => *span,
         }
     }
 }

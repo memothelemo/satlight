@@ -1,0 +1,2 @@
+type A = (value: any) -> void
+local a: A = function() end

@@ -1,0 +1,4 @@
+local callback = function() -> (string, string)
+	return "", ""
+end
+local a: string, b: string = callback()
