@@ -150,9 +150,9 @@ impl<'a> Analyzer<'a> {
                     self.type_description(&info.return_type)
                 )
             }
-            Type::Procrastinated(_, _) => {
+            Type::Procrastinated(..) | Type::CallProcrastinated(..) => {
                 panic!("This type is procrastinating!")
-            } //Type::Alias(node) => node.name.to_string(),
+            }
         }
     }
 
@@ -242,7 +242,34 @@ impl<'a> Analyzer<'a> {
                     return_type: Box::new(self.solve_type_recursive(&node.return_type)?),
                 }))
             }
-            Type::Procrastinated(id, _) => todo!(),
+            Type::Procrastinated(id, ..) => {
+                self.solve_type(&self.binder.symbols.get(*id).unwrap().typ.clone().unwrap())
+            }
+            Type::CallProcrastinated(id, ..) => {
+                match &self.binder.symbols.get(*id).unwrap().typ.as_ref().unwrap() {
+                    Type::Function(info) => self.solve_type(&info.return_type.clone()),
+                    Type::Table(tbl) if tbl.metatable.is_some() => {
+                        let metatable = tbl.metatable.as_ref().unwrap();
+
+                        // don't worry, it will ignore the span comparison.
+                        let value = match metatable.entries.get(&types::TableFieldKey::Name(
+                            "__call".to_string(),
+                            Span::invalid(),
+                        )) {
+                            Some(value) => value,
+                            None => unreachable!(),
+                        };
+
+                        // check if it is a function, meh!
+                        let value = self.solve_type(value)?;
+                        match value {
+                            Type::Function(info) => self.solve_type(&info.return_type),
+                            _ => unreachable!(),
+                        }
+                    }
+                    _ => unreachable!(),
+                }
+            }
         }
     }
 

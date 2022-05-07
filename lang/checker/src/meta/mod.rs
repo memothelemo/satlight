@@ -17,32 +17,28 @@ bitflags! {
 }
 
 lazy_static! {
-    static ref METAMETHODS_LIST: Vec<(&'static str, AcceptedType)> = vec![
-        // arithmetic
-        ("__add", AcceptedType::Function),
-        ("__sub", AcceptedType::Function),
-        ("__mul", AcceptedType::Function),
-        ("__div", AcceptedType::Function),
-        ("__mod", AcceptedType::Function),
-        ("__unm", AcceptedType::Function),
-        ("__concat", AcceptedType::Function),
-        ("__eq", AcceptedType::Function),
-        ("__lt", AcceptedType::Function),
-        ("__le", AcceptedType::Function),
-
-        // abstract object stuff
-        ("__call", AcceptedType::Function),
-        ("__tostring", AcceptedType::Function),
-
-        // indexing
-        ("__index", AcceptedType::Function | AcceptedType::Table),
-        ("__newindex", AcceptedType::Function)
-    ];
-
     static ref METAMETHODS: Dictionary<String, AcceptedType> = {
         let mut dictionary = Dictionary::new();
-        for (name, accepted) in METAMETHODS.iter() {
-            dictionary.insert(name.to_string(), *accepted);
+        for (name, accepted) in vec![("__add", AcceptedType::Function),
+            ("__sub", AcceptedType::Function),
+            ("__mul", AcceptedType::Function),
+            ("__div", AcceptedType::Function),
+            ("__mod", AcceptedType::Function),
+            ("__unm", AcceptedType::Function),
+            ("__concat", AcceptedType::Function),
+            ("__eq", AcceptedType::Function),
+            ("__lt", AcceptedType::Function),
+            ("__le", AcceptedType::Function),
+
+            // abstract object stuff
+            ("__call", AcceptedType::Function),
+            ("__tostring", AcceptedType::Function),
+
+            // indexing
+            ("__index", AcceptedType::Function | AcceptedType::Table),
+            ("__newindex", AcceptedType::Function)
+        ] {
+            dictionary.insert(name.to_string(), accepted);
         }
         dictionary
     };

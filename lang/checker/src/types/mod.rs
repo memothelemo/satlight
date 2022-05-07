@@ -8,6 +8,7 @@ pub mod utils;
 
 #[derive(Debug, Clone, PartialEq, Hash)]
 pub enum Type {
+    CallProcrastinated(Id<Symbol>, Span),
     Function(FunctionType),
     Literal(LiteralType),
     Procrastinated(Id<Symbol>, Span),
@@ -33,6 +34,7 @@ impl Type {
             Type::Table(node) => &mut node.span,
             Type::Function(node) => &mut node.span,
             Type::Procrastinated(.., span) => span,
+            Type::CallProcrastinated(.., span) => span,
         }
     }
 
@@ -44,6 +46,7 @@ impl Type {
             Type::Table(node) => node.span,
             Type::Function(node) => node.span,
             Type::Procrastinated(.., span) => *span,
+            Type::CallProcrastinated(_, span) => *span,
         }
     }
 

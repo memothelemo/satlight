@@ -19,7 +19,7 @@ impl<'a> Expr<'a> {
         match self {
             Expr::Call(node) => match node.base.typ() {
                 Type::Function(n) => n.return_type.borrow(),
-                _ => node.base.typ(),
+                _ => node.procrast_type.as_ref().unwrap(),
             },
             Expr::Function(node) => &node.typ,
             Expr::Literal(node) => &node.typ,
@@ -65,13 +65,13 @@ pub enum LibraryExpr<'a> {
 impl<'a> LibraryExpr<'a> {
     pub fn typ(&self) -> &Type {
         match self {
-            LibraryExpr::SetMetatable(_) => todo!(),
+            LibraryExpr::SetMetatable(node) => &node.return_type,
         }
     }
 
     pub fn span(&self) -> Span {
         match self {
-            LibraryExpr::SetMetatable(_) => todo!(),
+            LibraryExpr::SetMetatable(node) => node.span,
         }
     }
 }
@@ -79,6 +79,7 @@ impl<'a> LibraryExpr<'a> {
 #[derive(Debug, Clone)]
 pub struct Call<'a> {
     pub span: Span,
+    pub procrast_type: Option<Type>,
     pub base: Box<Expr<'a>>,
     pub arguments: Vec<Expr<'a>>,
 }

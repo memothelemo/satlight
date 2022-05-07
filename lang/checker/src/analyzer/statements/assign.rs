@@ -13,9 +13,9 @@ impl<'a> Validate<'a> for hir::LocalAssign<'a> {
 
             // fake expression types
             match (variable.expr.as_ref(), variable.explicit_type.as_ref()) {
-                (Some(ty), None) => ty.validate(analyzer)?,
+                (Some(ty), None) => analyzer.solve_type(ty)?.validate(analyzer)?,
                 (None, Some(ty)) => {
-                    ty.validate(analyzer)?;
+                    analyzer.solve_type(ty)?.validate(analyzer)?;
                     return Err(AnalyzeError::NotDefined {
                         variable: variable.name.to_string(),
                         explicit_type: analyzer.type_description(ty),
@@ -23,11 +23,13 @@ impl<'a> Validate<'a> for hir::LocalAssign<'a> {
                     });
                 }
                 (Some(a), Some(b)) => {
+                    let a = analyzer.solve_type(a)?;
+                    let b = analyzer.solve_type(b)?;
                     a.validate(analyzer)?;
                     b.validate(analyzer)?;
                     analyzer.check_lr_types(
-                        a,
-                        b,
+                        &a,
+                        &b,
                         variable
                             .expr_source
                             .unwrap_or(variable.explicit_type.as_ref().unwrap().span()),

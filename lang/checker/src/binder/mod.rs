@@ -106,6 +106,7 @@ impl<'a> Binder<'a> {
         }
 
         let symbol_id = self.insert_variable(
+            false,
             "setmetatable",
             SymbolFlags::Intrinsic,
             Some(Span::invalid()),
@@ -136,12 +137,14 @@ impl<'a> Binder<'a> {
     pub(crate) fn register_symbol(
         &mut self,
         definitions: Vec<Span>,
+        explicit: bool,
         flags: SymbolFlags,
         typ: Option<Type>,
         type_parameters: Option<Vec<TypeParameter>>,
     ) -> Id<Symbol> {
         self.symbols.alloc(Symbol {
             definitions,
+            explicit,
             flags,
             typ,
             type_parameters,
@@ -180,6 +183,7 @@ impl<'a> Binder<'a> {
 impl<'a> Binder<'a> {
     pub(crate) fn insert_variable(
         &mut self,
+        explicit: bool,
         name: &str,
         flags: SymbolFlags,
         span: Option<Span>,
@@ -188,6 +192,7 @@ impl<'a> Binder<'a> {
         // register a new variable :)
         let symbol_id = self.register_symbol(
             span.map(|v| vec![v]).unwrap_or(vec![Span::invalid()]),
+            explicit,
             flags,
             Some(typ),
             None,
@@ -207,6 +212,7 @@ impl<'a> Binder<'a> {
     ) -> Id<Symbol> {
         let symbol_id = self.register_symbol(
             span.map(|v| vec![v]).unwrap_or(vec![Span::invalid()]),
+            false,
             flags,
             Some(typ),
             parameters,

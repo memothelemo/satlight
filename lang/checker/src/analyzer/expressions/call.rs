@@ -7,7 +7,7 @@ impl<'a> Validate<'a> for hir::Call<'a> {
         self.base.validate(analyzer)?;
 
         // making sure that the base expression is a callback type
-        let function_info = match analyzer.skip_downwards(self.base.typ().clone()) {
+        let function_info = match analyzer.solve_type(self.base.typ())? {
             Type::Function(info) => info,
             Type::Table(tbl) if tbl.metatable.is_some() => {
                 let metatable = tbl.metatable.unwrap();

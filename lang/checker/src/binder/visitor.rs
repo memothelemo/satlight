@@ -33,6 +33,7 @@ impl<'a> Binder<'a> {
     ) -> hir::Expr<'a> {
         let mut arguments = Vec::new();
         let base = self.visit_expr(node.base().borrow());
+
         match args {
             ast::Args::ExprList(list) => {
                 for expr in list.iter() {
@@ -51,8 +52,15 @@ impl<'a> Binder<'a> {
             )),
         };
 
+        let procrast_type = if let Type::Procrastinated(symbol_id, span) = &base.typ() {
+            Some(Type::CallProcrastinated(*symbol_id, *span))
+        } else {
+            None
+        };
+
         hir::Expr::Call(hir::Call {
             span: node.span(),
+            procrast_type,
             base: Box::new(base),
             arguments,
         })
@@ -82,7 +90,7 @@ impl<'a> Binder<'a> {
                     return self.visit_call_expr_inner(node, args);
                 };
 
-                let metatable = if let Some(arg) = list.get(1) {
+                let mut metatable = if let Some(arg) = list.get(1) {
                     self.visit_expr(arg)
                 } else {
                     invalid_lib_use!(self, node.span(), "setmetatable");
@@ -90,7 +98,7 @@ impl<'a> Binder<'a> {
                 };
 
                 let symbol_id =
-                    self.register_symbol(vec![node.span()], SymbolFlags::Value, None, None);
+                    self.register_symbol(vec![node.span()], true, SymbolFlags::Value, None, None);
 
                 // making a procrastinated type
                 let typ = types::makers::procrastinated(symbol_id, node.span());
@@ -99,6 +107,9 @@ impl<'a> Binder<'a> {
                 if let Some(base_symbol) = base.symbol() {
                     scope.facts.vars.insert(base_symbol, symbol_id);
                 }
+
+                let symbol = self.symbols.get_mut(symbol_id).unwrap();
+                symbol.typ = Some(typ.clone());
 
                 hir::Expr::Library(hir::LibraryExpr::SetMetatable(hir::SetMetatable {
                     return_type: typ,
@@ -218,6 +229,7 @@ impl<'a> Binder<'a> {
             defaults.push(param.default.as_ref().map(|v| self.visit_expr(v)));
 
             self.insert_variable(
+                true,
                 &name,
                 SymbolFlags::FunctionParameter,
                 Some(param.span),
@@ -547,6 +559,7 @@ impl<'a> ExprVisitor<'a> for Binder<'a> {
                         span: node.span(),
                         symbol: Some(self.register_symbol(
                             vec![node.span()],
+                            false,
                             SymbolFlags::UnknownVariable,
                             Some(types::makers::any(node.span())),
                             None,
@@ -620,6 +633,7 @@ impl<'a> StmtVisitor<'a> for Binder<'a> {
                 .unwrap_or((None, None));
 
             let symbol_id = self.insert_variable(
+                name.type_info().is_some(),
                 &real_name,
                 SymbolFlags::BlockVariable,
                 Some(name.span()),

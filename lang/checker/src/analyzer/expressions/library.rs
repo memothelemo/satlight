@@ -1,3 +1,5 @@
+use crate::meta::Checker;
+
 use super::*;
 
 impl<'a> Validate<'a> for hir::SetMetatable<'a> {
@@ -7,7 +9,7 @@ impl<'a> Validate<'a> for hir::SetMetatable<'a> {
         let base_type = analyzer.solve_type(self.base_table.typ())?;
         let metatable_type = analyzer.solve_type(self.metatable.typ())?;
 
-        let (mut base_table, metatable) = match (base_type, metatable_type) {
+        let (mut base_table, mut metatable) = match (base_type, metatable_type) {
             (Type::Table(a), Type::Table(b)) => (a, b),
             _ => {
                 return Err(AnalyzeError::InvalidLibraryUse {
@@ -17,10 +19,24 @@ impl<'a> Validate<'a> for hir::SetMetatable<'a> {
             }
         };
 
+        metatable.is_metatable = true;
         base_table.metatable = Some(Box::new(metatable));
-        println!("{:#?}", self);
 
-        todo!()
+        let symbol_id = match self.return_type {
+            Type::Procrastinated(id, ..) => id,
+            _ => unreachable!(),
+        };
+
+        unsafe {
+            let symbols = std::ptr::addr_of!(analyzer.binder.symbols).as_mut();
+
+            // Am I validating Rust memory rules now?
+            let symbol = (*symbols).get_mut(symbol_id).unwrap();
+            symbol.typ = Some(types::Type::Table(base_table.clone()));
+        }
+
+        Type::Table(base_table).validate(analyzer)?;
+        Ok(())
     }
 }
 

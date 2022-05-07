@@ -24,6 +24,7 @@ bitflags! {
 #[derive(Debug)]
 pub struct Symbol {
     pub definitions: Vec<Span>,
+    pub explicit: bool,
     pub flags: SymbolFlags,
     pub typ: Option<Type>,
     pub type_parameters: Option<Vec<TypeParameter>>,

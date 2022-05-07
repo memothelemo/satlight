@@ -1,3 +1,4 @@
+#![feature(ptr_const_cast)]
 #![allow(clippy::new_without_default)]
 #![allow(clippy::or_fun_call)]
 #![allow(clippy::large_enum_variant)]
