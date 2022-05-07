@@ -17,6 +17,7 @@ bitflags! {
         const UnknownVariable = 0b00100000;
 
         const Intrinsic = 0b01000000;
+        const Value = 0b10000000;
     }
 }
 

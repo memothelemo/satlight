@@ -2,10 +2,12 @@ use super::*;
 
 mod call;
 mod function;
+mod library;
 mod table;
 
 pub use call::*;
 pub use function::*;
+pub use library::*;
 pub use table::*;
 
 impl<'a> Validate<'a> for hir::Expr<'a> {
@@ -18,6 +20,7 @@ impl<'a> Validate<'a> for hir::Expr<'a> {
             hir::Expr::Table(node) => node.validate(analyzer),
             hir::Expr::Function(node) => node.validate(analyzer),
             hir::Expr::Call(node) => node.validate(analyzer),
+            hir::Expr::Library(node) => node.validate(analyzer),
         }
     }
 }

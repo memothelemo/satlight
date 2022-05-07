@@ -149,6 +149,9 @@ impl<'a> Analyzer<'a> {
                     params.join(","),
                     self.type_description(&info.return_type)
                 )
+            }
+            Type::Procrastinated(_, _) => {
+                panic!("This type is procrastinating!")
             } //Type::Alias(node) => node.name.to_string(),
         }
     }
@@ -239,6 +242,7 @@ impl<'a> Analyzer<'a> {
                     return_type: Box::new(self.solve_type_recursive(&node.return_type)?),
                 }))
             }
+            Type::Procrastinated(id, _) => todo!(),
         }
     }
 

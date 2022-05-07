@@ -5,7 +5,113 @@ use salite_ast as ast;
 use salite_common::dictionary::Dictionary;
 use std::borrow::Borrow;
 
+macro_rules! literal_macro {
+    ($self:expr, $typ:expr, $node:expr, $base:expr, $symbol:expr) => {
+        hir::Expr::Literal(hir::Literal {
+            span: $node.span(),
+            symbol: $symbol,
+            typ: $typ,
+            node_id: $self.nodes.alloc($base),
+        })
+    };
+}
+
+macro_rules! invalid_lib_use {
+    ($self:expr, $span:expr, $lib:expr) => {
+        $self.diagnostics.push(Diagnostic::InvalidLibraryUse {
+            lib: $lib.to_string(),
+            span: $span,
+        });
+    };
+}
+
 impl<'a> Binder<'a> {
+    pub(crate) fn visit_call_expr_inner(
+        &mut self,
+        node: &'a ast::Suffixed,
+        args: &'a ast::Args,
+    ) -> hir::Expr<'a> {
+        let mut arguments = Vec::new();
+        let base = self.visit_expr(node.base().borrow());
+        match args {
+            ast::Args::ExprList(list) => {
+                for expr in list.iter() {
+                    arguments.push(self.visit_expr(expr));
+                }
+            }
+            ast::Args::Table(arg) => {
+                arguments.push(self.visit_table_ctor_expr(arg));
+            }
+            ast::Args::Str(arg) => arguments.push(literal_macro!(
+                self,
+                types::makers::string(node.span()),
+                arg,
+                node,
+                None
+            )),
+        };
+
+        hir::Expr::Call(hir::Call {
+            span: node.span(),
+            base: Box::new(base),
+            arguments,
+        })
+    }
+
+    pub(crate) fn eval_lua_call_globals(
+        &mut self,
+        name: &str,
+        node: &'a ast::Suffixed,
+        args: &'a ast::Args,
+    ) -> hir::Expr<'a> {
+        match name {
+            "setmetatable" => {
+                let list = match args {
+                    ast::Args::ExprList(list) => list,
+                    _ => {
+                        invalid_lib_use!(self, node.span(), "setmetatable");
+                        return self.visit_call_expr_inner(node, args);
+                    }
+                };
+
+                // procrastinate the setmetatable check and set its symbol
+                let base = if let Some(arg) = list.get(0) {
+                    self.visit_expr(arg)
+                } else {
+                    invalid_lib_use!(self, node.span(), "setmetatable");
+                    return self.visit_call_expr_inner(node, args);
+                };
+
+                let metatable = if let Some(arg) = list.get(1) {
+                    self.visit_expr(arg)
+                } else {
+                    invalid_lib_use!(self, node.span(), "setmetatable");
+                    return self.visit_call_expr_inner(node, args);
+                };
+
+                let symbol_id =
+                    self.register_symbol(vec![node.span()], SymbolFlags::Value, None, None);
+
+                // making a procrastinated type
+                let typ = types::makers::procrastinated(symbol_id, node.span());
+                let scope = self.current_scope_mut();
+
+                if let Some(base_symbol) = base.symbol() {
+                    scope.facts.vars.insert(base_symbol, symbol_id);
+                }
+
+                hir::Expr::Library(hir::LibraryExpr::SetMetatable(hir::SetMetatable {
+                    return_type: typ,
+                    span: node.span(),
+                    base_symbol: base.symbol(),
+                    base_table: Box::new(base),
+                    metatable: Box::new(metatable),
+                }))
+            }
+            _ => panic!("Unknown lua global: {}", name),
+        }
+    }
+
     pub(crate) fn visit_type_table_inner(
         &mut self,
         node: &'a ast::TypeTable,
@@ -280,16 +386,6 @@ impl<'a> TypeVisitor<'a> for Binder<'a> {
     }
 }
 
-macro_rules! literal_macro {
-    ($self:expr, $typ:expr, $node:expr, $base:expr) => {
-        hir::Expr::Literal(hir::Literal {
-            span: $node.span(),
-            typ: $typ,
-            node_id: $self.nodes.alloc($base),
-        })
-    };
-}
-
 impl<'a> ExprVisitor<'a> for Binder<'a> {
     type Output = hir::Expr<'a>;
 
@@ -386,31 +482,16 @@ impl<'a> ExprVisitor<'a> for Binder<'a> {
     fn visit_suffixed_expr(&mut self, node: &'a ast::Suffixed) -> Self::Output {
         match node.suffix() {
             ast::SuffixKind::Call(args) => {
-                let mut arguments = Vec::new();
-                let base = self.visit_expr(node.base().borrow());
-
-                match args {
-                    ast::Args::ExprList(list) => {
-                        for expr in list.iter() {
-                            arguments.push(self.visit_expr(expr));
+                // check for lua globals?
+                if let ast::Expr::Literal(ast::Literal::Name(tok)) = node.base().borrow() {
+                    let name = tok.ty().as_name();
+                    for (id, _) in self.var_globals.iter() {
+                        if id == &name {
+                            return self.eval_lua_call_globals(&name, node, args);
                         }
                     }
-                    ast::Args::Table(arg) => {
-                        arguments.push(self.visit_table_ctor_expr(arg));
-                    }
-                    ast::Args::Str(arg) => arguments.push(literal_macro!(
-                        self,
-                        types::makers::string(node.span()),
-                        arg,
-                        node
-                    )),
-                };
-
-                hir::Expr::Call(hir::Call {
-                    span: node.span(),
-                    base: Box::new(base),
-                    arguments,
-                })
+                }
+                self.visit_call_expr_inner(node, args)
             }
             ast::SuffixKind::Computed(_) => todo!(),
             ast::SuffixKind::Method(_) => todo!(),
@@ -439,7 +520,7 @@ impl<'a> ExprVisitor<'a> for Binder<'a> {
     fn visit_literal_expr(&mut self, base: &'a ast::Literal) -> Self::Output {
         match base {
             ast::Literal::Bool(node) => {
-                literal_macro!(self, types::makers::bool(node.span()), node, base)
+                literal_macro!(self, types::makers::bool(node.span()), node, base, None)
             }
             ast::Literal::Function(node) => self.visit_function_expr(node),
             ast::Literal::Name(node) => {
@@ -453,6 +534,7 @@ impl<'a> ExprVisitor<'a> for Binder<'a> {
                         // meh?
                         typ: unwrap_symbol_type(symbol).clone(),
                         span: node.span(),
+                        symbol: Some(symbol_id),
                         node_id: self.nodes.alloc(base),
                     })
                 } else {
@@ -463,18 +545,24 @@ impl<'a> ExprVisitor<'a> for Binder<'a> {
                     hir::Expr::Literal(hir::Literal {
                         typ: types::makers::any(node.span()),
                         span: node.span(),
+                        symbol: Some(self.register_symbol(
+                            vec![node.span()],
+                            SymbolFlags::UnknownVariable,
+                            Some(types::makers::any(node.span())),
+                            None,
+                        )),
                         node_id: self.nodes.alloc(base),
                     })
                 }
             }
             ast::Literal::Number(node) => {
-                literal_macro!(self, types::makers::number(node.span()), node, base)
+                literal_macro!(self, types::makers::number(node.span()), node, base, None)
             }
             ast::Literal::Nil(node) => {
-                literal_macro!(self, types::makers::nil(node.span()), node, base)
+                literal_macro!(self, types::makers::nil(node.span()), node, base, None)
             }
             ast::Literal::Str(node) => {
-                literal_macro!(self, types::makers::string(node.span()), node, base)
+                literal_macro!(self, types::makers::string(node.span()), node, base, None)
             }
             ast::Literal::Table(node) => self.visit_table_ctor_expr(node),
             ast::Literal::Varargs(node) => self.visit_varargs_expr(node),
@@ -486,10 +574,11 @@ impl<'a> StmtVisitor<'a> for Binder<'a> {
     type Output = hir::Stmt<'a>;
 
     fn visit_call_stmt(&mut self, node: &'a ast::Expr) -> Self::Output {
-        hir::Stmt::Call(match self.visit_expr(node) {
-            hir::Expr::Call(n) => n,
+        match self.visit_expr(node) {
+            hir::Expr::Call(n) => hir::Stmt::Call(n),
+            hir::Expr::Library(n) => hir::Stmt::Library(n),
             _ => unreachable!(),
-        })
+        }
     }
 
     fn visit_do_stmt(&mut self, node: &'a ast::DoStmt) -> Self::Output {

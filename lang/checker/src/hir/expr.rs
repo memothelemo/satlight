@@ -1,5 +1,5 @@
 use super::*;
-use crate::types::Type;
+use crate::{binder::Symbol, types::Type};
 use id_arena::Id;
 use salite_ast::{Node, Span};
 use std::borrow::Borrow;
@@ -8,6 +8,7 @@ use std::borrow::Borrow;
 pub enum Expr<'a> {
     Call(Call<'a>),
     Function(Function<'a>),
+    Library(LibraryExpr<'a>),
     Literal(Literal<'a>),
     TypeAssertion(TypeAssertion<'a>),
     Table(Table<'a>),
@@ -24,6 +25,7 @@ impl<'a> Expr<'a> {
             Expr::Literal(node) => &node.typ,
             Expr::TypeAssertion(node) => &node.cast,
             Expr::Table(node) => &node.typ,
+            Expr::Library(node) => node.typ(),
         }
     }
 
@@ -34,6 +36,42 @@ impl<'a> Expr<'a> {
             Expr::TypeAssertion(node) => node.span,
             Expr::Table(node) => node.span,
             Expr::Call(node) => node.span,
+            Expr::Library(node) => node.span(),
+        }
+    }
+
+    pub fn symbol(&self) -> Option<Id<Symbol>> {
+        match self {
+            Expr::Literal(node) => node.symbol,
+            _ => None,
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct SetMetatable<'a> {
+    pub span: Span,
+    pub return_type: Type,
+    pub base_table: Box<Expr<'a>>,
+    pub base_symbol: Option<Id<Symbol>>,
+    pub metatable: Box<Expr<'a>>,
+}
+
+#[derive(Debug, Clone)]
+pub enum LibraryExpr<'a> {
+    SetMetatable(SetMetatable<'a>),
+}
+
+impl<'a> LibraryExpr<'a> {
+    pub fn typ(&self) -> &Type {
+        match self {
+            LibraryExpr::SetMetatable(_) => todo!(),
+        }
+    }
+
+    pub fn span(&self) -> Span {
+        match self {
+            LibraryExpr::SetMetatable(_) => todo!(),
         }
     }
 }
@@ -66,6 +104,7 @@ pub struct Function<'a> {
 pub struct Literal<'a> {
     pub span: Span,
     pub typ: Type,
+    pub symbol: Option<Id<Symbol>>,
     pub node_id: Id<&'a dyn Node>,
 }
 

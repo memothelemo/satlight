@@ -28,6 +28,10 @@ pub fn nil(span: Span) -> Type {
     })
 }
 
+pub fn procrastinated(symbol: Id<Symbol>, span: Span) -> Type {
+    Type::Procrastinated(symbol, span)
+}
+
 pub fn reference(span: Span, symbol: Id<Symbol>, name: String, args: Option<Vec<Type>>) -> Type {
     Type::Ref(RefType {
         name,

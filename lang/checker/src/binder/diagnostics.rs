@@ -3,6 +3,9 @@ use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum Diagnostic {
+    #[error("Invalid use of {lib}")]
+    InvalidLibraryUse { lib: String, span: Span },
+
     #[error("Unknown type alias: {name}")]
     UnknownTypeAlias { name: String, span: Span },
 

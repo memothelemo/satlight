@@ -3,6 +3,9 @@ use thiserror::Error;
 
 #[derive(Debug, Clone, PartialEq, Error)]
 pub enum AnalyzeError {
+    #[error("Invalid use of {lib}")]
+    InvalidLibraryUse { lib: String, span: Span },
+
     #[error("Attempt to call with a non-call value or expression")]
     NonCallExpression { span: Span },
 
@@ -91,6 +94,7 @@ impl AnalyzeError {
             AnalyzeError::MissingTypeArgument { span, .. } => *span,
             AnalyzeError::ExcessiveParameter { span, .. } => *span,
             AnalyzeError::ExcessiveVarargParam { span, .. } => *span,
+            AnalyzeError::InvalidLibraryUse { span, .. } => *span,
         }
     }
 }

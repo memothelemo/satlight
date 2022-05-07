@@ -105,7 +105,7 @@ impl<'a> Binder<'a> {
             };
         }
 
-        self.insert_variable(
+        let symbol_id = self.insert_variable(
             "setmetatable",
             SymbolFlags::Intrinsic,
             Some(Span::invalid()),
@@ -129,6 +129,8 @@ impl<'a> Binder<'a> {
                 return_type: Box::new(types::makers::void(Span::invalid())),
             }),
         );
+        self.var_globals
+            .insert("setmetatable".to_string(), symbol_id);
     }
 
     pub(crate) fn register_symbol(

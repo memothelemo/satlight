@@ -10,6 +10,7 @@ pub mod utils;
 pub enum Type {
     Function(FunctionType),
     Literal(LiteralType),
+    Procrastinated(Id<Symbol>, Span),
     Ref(RefType),
     Tuple(TupleType),
     Table(Table),
@@ -31,6 +32,7 @@ impl Type {
             Type::Tuple(node) => &mut node.span,
             Type::Table(node) => &mut node.span,
             Type::Function(node) => &mut node.span,
+            Type::Procrastinated(.., span) => span,
         }
     }
 
@@ -41,6 +43,7 @@ impl Type {
             Type::Tuple(node) => node.span,
             Type::Table(node) => node.span,
             Type::Function(node) => node.span,
+            Type::Procrastinated(.., span) => *span,
         }
     }
 
