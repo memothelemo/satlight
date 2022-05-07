@@ -27,7 +27,7 @@ jobs:
       - name: Install rust
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: ${{ matrix.rust || 'stable' }}
+          toolchain: ${{ matrix.rust || 'nightly' }}
           profile: minimal
           override: true
 

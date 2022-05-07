@@ -1,4 +1,19 @@
-## Salite
+# Salite
+
+## About
+
+An intimation of Luau programming language but has a bit
+different syntax and somewhat different typing approach.
+
+**This programming language is experimental and unstable especially the typechecking system. Use it at your own risk.**
+
+## Prerequisities when compiling
+
+Make sure you set your toolchain to `nightly`, because it requires the feature of [`ptr_const_cast`](./lang/checker/src/analyzer/expressions/library.rs)
+
+Search it for yourself how to do that.
+
+## Code
 
 ```
 local function factorial(n: number) -> number
