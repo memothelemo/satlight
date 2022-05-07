@@ -1,0 +1,5 @@
+local function that()
+	return 1
+end
+local a: () -> any = that
+local b: number = a()

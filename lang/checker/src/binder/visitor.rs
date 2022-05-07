@@ -55,7 +55,7 @@ impl<'a> Binder<'a> {
         let procrast_type = if let Type::Procrastinated(symbol_id, span) = &base.typ() {
             Some(Type::CallProcrastinated(*symbol_id, *span))
         } else {
-            None
+            Some(types::makers::any(node.span()))
         };
 
         hir::Expr::Call(hir::Call {
@@ -276,7 +276,6 @@ impl<'a> Binder<'a> {
 
         self.pop_scope();
 
-        let typ = expr.typ.clone();
         expr
     }
 
@@ -669,7 +668,34 @@ impl<'a> StmtVisitor<'a> for Binder<'a> {
     }
 
     fn visit_local_function_stmt(&mut self, node: &'a ast::LocalFunction) -> Self::Output {
-        todo!()
+        let name = node.name().ty().as_name();
+        let node_id = self.nodes.alloc(node);
+        let body = self.visit_function_body(node.body(), node_id, node.span());
+
+        let symbol_id = self.insert_variable(
+            false,
+            &name,
+            SymbolFlags::BlockVariable,
+            Some(node.span()),
+            body.typ.clone(),
+        );
+
+        let stmt = hir::Stmt::LocalAssign(hir::LocalAssign {
+            variables: vec![hir::LocalAssignVar {
+                name,
+                name_span: node.name().span(),
+                name_symbol: symbol_id,
+                explicit_type: None,
+                expr_id: 0,
+                expr_source: Some(body.span),
+                expr: Some(body.typ.clone()),
+            }],
+            span: node.span(),
+            node_id: body.node_id,
+            exprs: vec![hir::Expr::Function(body)],
+        });
+
+        stmt
     }
 
     fn visit_numeric_for_stmt(&mut self, node: &'a ast::NumericFor) -> Self::Output {

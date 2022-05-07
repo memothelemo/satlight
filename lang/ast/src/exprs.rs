@@ -1,3 +1,4 @@
+#![allow(clippy::large_enum_variant)]
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
