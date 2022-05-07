@@ -9,6 +9,34 @@ impl<'a> Validate<'a> for hir::Call<'a> {
         // making sure that the base expression is a callback type
         let function_info = match analyzer.skip_downwards(self.base.typ().clone()) {
             Type::Function(info) => info,
+            Type::Table(tbl) if tbl.metatable.is_some() => {
+                let metatable = tbl.metatable.unwrap();
+
+                // don't worry, it will ignore the span comparison.
+                let value = match metatable.entries.get(&types::TableFieldKey::Name(
+                    "__call".to_string(),
+                    Span::invalid(),
+                )) {
+                    Some(value) => value,
+                    None => {
+                        return Err(AnalyzeError::NonCallExpression {
+                            span: self.base.span(),
+                        })
+                    }
+                };
+
+                // check if it is a function, meh!
+                let value = analyzer.solve_type(value)?;
+                match value {
+                    Type::Function(info) => info,
+                    _ => {
+                        return Err(AnalyzeError::InvalidMetamethod {
+                            span: self.base.span(),
+                            metamethod: "__call".to_string(),
+                        })
+                    }
+                }
+            }
             _ => {
                 return Err(AnalyzeError::NonCallExpression {
                     span: self.base.span(),
