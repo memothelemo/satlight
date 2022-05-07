@@ -14,11 +14,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        rust_version: [stable, "1.60.0"]
-
     steps:
       - uses: actions/checkout@v1
         with:
@@ -27,7 +22,7 @@ jobs:
       - name: Install rust
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: ${{ matrix.rust || 'nightly' }}
+          toolchain: nightly
           profile: minimal
           override: true
 
