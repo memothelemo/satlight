@@ -154,6 +154,24 @@ impl<'a> Analyzer<'a> {
                 let member_type = tupl.members.get(0).unwrap();
                 self.check_lr_types(member_type, &right, span)
             }
+            (Type::Tuple(a), Type::Tuple(b)) if a.members.len() <= b.members.len() => {
+                for (idx, member) in b.members.iter().enumerate() {
+                    let value_member = a.members.get(idx);
+                    match value_member {
+                        Some(val) => {
+                            self.check_lr_types(val, member, span)?;
+                        }
+                        None => {
+                            return Err(AnalyzeError::NotExtendable {
+                                value: leftd,
+                                assertion: rightd,
+                                span,
+                            })
+                        }
+                    }
+                }
+                Ok(())
+            }
 
             _ if left == right => Ok(()),
             _ => Err(AnalyzeError::NotExtendable {
