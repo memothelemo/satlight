@@ -7,6 +7,34 @@ use salite_traits::SpannedNode;
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, Clone, PartialEq, FieldCall, CtorCall)]
+pub struct TypeIntersection {
+    #[exclude]
+    span: Span,
+    members: Vec<TypeInfo>,
+}
+
+impl SpannedNode for TypeIntersection {
+    fn span(&self) -> Span {
+        self.span
+    }
+}
+
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, PartialEq, FieldCall, CtorCall)]
+pub struct TypeUnion {
+    #[exclude]
+    span: Span,
+    members: Vec<TypeInfo>,
+}
+
+impl SpannedNode for TypeUnion {
+    fn span(&self) -> Span {
+        self.span
+    }
+}
+
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, PartialEq, FieldCall, CtorCall)]
 pub struct TypeTuple {
     #[exclude]
     span: Span,
@@ -130,10 +158,12 @@ impl SpannedNode for TypeMetatable {
 #[derive(Debug, Clone, PartialEq)]
 pub enum TypeInfo {
     Callback(TypeCallback),
+    Intersection(TypeIntersection),
     Reference(TypeReference),
     Metatable(TypeMetatable),
     Table(TypeTable),
     Tuple(TypeTuple),
+    Union(TypeUnion),
 }
 
 impl SpannedNode for TypeInfo {
@@ -144,6 +174,8 @@ impl SpannedNode for TypeInfo {
             TypeInfo::Table(node) => node.span(),
             TypeInfo::Metatable(node) => node.span(),
             TypeInfo::Tuple(node) => node.span(),
+            TypeInfo::Intersection(node) => node.span(),
+            TypeInfo::Union(node) => node.span(),
         }
     }
 }

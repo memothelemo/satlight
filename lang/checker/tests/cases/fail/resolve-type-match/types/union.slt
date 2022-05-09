@@ -1,0 +1,2 @@
+type A = void | string
+local a: A = 10

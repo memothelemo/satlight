@@ -10,11 +10,13 @@ pub mod utils;
 pub enum Type {
     CallProcrastinated(Id<Symbol>, Span),
     Function(FunctionType),
+    Intersection(IntersectionType),
     Literal(LiteralType),
     Procrastinated(Id<Symbol>, Span),
     Ref(RefType),
     Tuple(TupleType),
     Table(Table),
+    Union(UnionType),
 }
 
 impl Type {
@@ -35,6 +37,8 @@ impl Type {
             Type::Function(node) => &mut node.span,
             Type::Procrastinated(.., span) => span,
             Type::CallProcrastinated(.., span) => span,
+            Type::Intersection(node) => &mut node.span,
+            Type::Union(node) => &mut node.span,
         }
     }
 
@@ -47,6 +51,8 @@ impl Type {
             Type::Function(node) => node.span,
             Type::Procrastinated(.., span) => *span,
             Type::CallProcrastinated(_, span) => *span,
+            Type::Intersection(node) => node.span,
+            Type::Union(node) => node.span,
         }
     }
 
@@ -66,6 +72,42 @@ impl Type {
         let mut types = Vec::new();
         self.deref_tuples_inner(&mut types);
         types
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct IntersectionType {
+    pub span: Span,
+    pub members: Vec<Type>,
+}
+
+impl PartialEq for IntersectionType {
+    fn eq(&self, other: &Self) -> bool {
+        self.members == other.members
+    }
+}
+
+impl std::hash::Hash for IntersectionType {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.members.hash(state)
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct UnionType {
+    pub span: Span,
+    pub members: Vec<Type>,
+}
+
+impl PartialEq for UnionType {
+    fn eq(&self, other: &Self) -> bool {
+        self.members == other.members
+    }
+}
+
+impl std::hash::Hash for UnionType {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.members.hash(state)
     }
 }
 
@@ -166,6 +208,24 @@ pub struct Table {
     pub span: Span,
     pub entries: Dictionary<TableFieldKey, Type>,
     pub metatable: Option<Box<Table>>,
+}
+
+impl Table {
+    pub fn combine(&mut self, tbl: &Table, span: Span) {
+        for (key, right) in tbl.entries.iter() {
+            // TODO(memothelemo): Make an utility thing where it tries
+            // to combine left and right types instead of this approach.
+            let current_value = self.entries.get_mut(key);
+            if let Some(current_value) = current_value {
+                *current_value = Type::Intersection(IntersectionType {
+                    span,
+                    members: vec![current_value.clone(), right.clone()],
+                });
+            } else {
+                self.entries.insert(key.clone(), right.clone());
+            }
+        }
+    }
 }
 
 impl PartialEq for Table {

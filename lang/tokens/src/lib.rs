@@ -87,6 +87,9 @@ symbols! {
 
         MetatableTag => "@metatable",
         Question => "?",
+
+        VerticalBar => "|",
+        Ampersand => "&",
     }
 }
 

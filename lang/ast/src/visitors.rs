@@ -53,6 +53,8 @@ pub trait TypeVisitor<'a> {
     fn visit_type_table(&mut self, node: &'a TypeTable) -> Self::Output;
     fn visit_type_metatable(&mut self, node: &'a TypeMetatable) -> Self::Output;
     fn visit_type_tuple(&mut self, node: &'a TypeTuple) -> Self::Output;
+    fn visit_type_intersection(&mut self, node: &'a TypeIntersection) -> Self::Output;
+    fn visit_type_union(&mut self, node: &'a TypeUnion) -> Self::Output;
 
     fn visit_type_info(&mut self, node: &'a TypeInfo) -> Self::Output {
         match node {
@@ -61,6 +63,8 @@ pub trait TypeVisitor<'a> {
             TypeInfo::Table(node) => self.visit_type_table(node),
             TypeInfo::Metatable(node) => self.visit_type_metatable(node),
             TypeInfo::Tuple(node) => self.visit_type_tuple(node),
+            TypeInfo::Intersection(node) => self.visit_type_intersection(node),
+            TypeInfo::Union(node) => self.visit_type_union(node),
         }
     }
 }

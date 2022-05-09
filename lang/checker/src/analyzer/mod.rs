@@ -112,6 +112,15 @@ impl<'a> Analyzer<'a> {
     }
 
     pub fn type_description(&self, typ: &Type) -> String {
+        macro_rules! member_description {
+            ($members:expr, $prefix:expr) => {
+                $members
+                    .iter()
+                    .map(|v| self.type_description(v))
+                    .collect::<Vec<String>>()
+                    .join(&$prefix.to_string())
+            };
+        }
         match typ {
             Type::Ref(info) => info.name.to_string(),
             Type::Tuple(info) => {
@@ -153,6 +162,8 @@ impl<'a> Analyzer<'a> {
             Type::Procrastinated(..) | Type::CallProcrastinated(..) => {
                 panic!("This type is procrastinating!")
             }
+            Type::Intersection(node) => member_description!(node.members, " & "),
+            Type::Union(node) => member_description!(node.members, " | "),
         }
     }
 
@@ -269,6 +280,59 @@ impl<'a> Analyzer<'a> {
                     }
                     _ => unreachable!(),
                 }
+            }
+            Type::Intersection(node) => {
+                // table mergies
+                let mut members = Vec::new();
+                let mut table_mergies = Vec::new();
+
+                for member in node.members.iter() {
+                    let member = self.solve_type_recursive(member)?;
+                    if let Type::Table(tbl) = member {
+                        table_mergies.push(tbl);
+                    } else {
+                        members.push(member);
+                    }
+                }
+
+                // combine both together to form merged table
+                let table_length = table_mergies.len();
+                match table_length.cmp(&1) {
+                    std::cmp::Ordering::Equal => {
+                        let mut table_mergies = table_mergies.drain(..);
+                        members.push(Type::Table(table_mergies.next().unwrap()));
+                    }
+                    std::cmp::Ordering::Greater => {
+                        let mut table_mergies = table_mergies.drain(..);
+                        let mut base_table = table_mergies.next().unwrap();
+
+                        for tbl in table_mergies {
+                            base_table.combine(&tbl, node.span);
+                        }
+
+                        members.push(Type::Table(base_table));
+                    }
+                    _ => {}
+                };
+
+                if table_length == node.members.len() {
+                    Ok(members.last().unwrap().clone())
+                } else {
+                    Ok(Type::Intersection(types::IntersectionType {
+                        span: node.span,
+                        members,
+                    }))
+                }
+            }
+            Type::Union(node) => {
+                let mut members = Vec::new();
+                for member in node.members.iter() {
+                    members.push(self.solve_type_recursive(member)?)
+                }
+                Ok(Type::Union(types::UnionType {
+                    span: node.span,
+                    members,
+                }))
             }
         }
     }

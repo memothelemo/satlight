@@ -24,7 +24,7 @@ impl<'a> Analyzer<'a> {
             match left.entries.get_retrieve_id(key) {
                 Some((id, other_value)) => {
                     counted_indexes.push(id);
-                    self.check_lr_types(value, other_value, span)
+                    self.check_lr_types(other_value, value, span)
                         .map_err(|err| AnalyzeError::InvalidField {
                             span,
                             key: self.table_key_description(key),
@@ -54,7 +54,7 @@ impl<'a> Analyzer<'a> {
                     }
                     for (id, (ak, av)) in batched_values.iter() {
                         counted_indexes.push(*id);
-                        self.check_lr_types(value, av, span).map_err(|err| {
+                        self.check_lr_types(av, value, span).map_err(|err| {
                             AnalyzeError::InvalidField {
                                 span,
                                 key: self.table_key_description(ak),
@@ -98,6 +98,43 @@ impl<'a> Analyzer<'a> {
         let left = self.skip_downwards(left.clone());
         let right = self.skip_downwards(right.clone());
         match (&left, &right) {
+            (value, Type::Intersection(..))
+                if {
+                    // we need to solve the intersection, maybe there's table
+                    // merge or something like that?
+                    let inter = match self.solve_type(&right)? {
+                        Type::Intersection(inter) => inter,
+                        result => return self.check_lr_types(value, &result, span),
+                    };
+
+                    let mut did_match = true;
+                    for member in inter.members.iter() {
+                        if self.check_lr_types(value, member, span).is_err() {
+                            did_match = false;
+                            break;
+                        }
+                    }
+                    did_match
+                } =>
+            {
+                Ok(())
+            }
+
+            (value, Type::Union(union))
+                if {
+                    let mut did_match = false;
+                    for member in union.members.iter() {
+                        if self.check_lr_types(value, member, span).is_ok() {
+                            did_match = true;
+                            break;
+                        }
+                    }
+                    did_match
+                } =>
+            {
+                Ok(())
+            }
+
             (Type::Function(a), Type::Function(b)) => {
                 for (idx, param) in a.parameters.iter().enumerate() {
                     let expected = match b.parameters.get(idx) {

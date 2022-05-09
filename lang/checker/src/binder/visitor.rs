@@ -395,6 +395,28 @@ impl<'a> TypeVisitor<'a> for Binder<'a> {
             members,
         })
     }
+
+    fn visit_type_intersection(&mut self, node: &'a ast::TypeIntersection) -> Self::Output {
+        let mut members = Vec::new();
+        for member in node.members().iter() {
+            members.push(self.visit_type_info(member));
+        }
+        Type::Intersection(types::IntersectionType {
+            span: node.span(),
+            members,
+        })
+    }
+
+    fn visit_type_union(&mut self, node: &'a ast::TypeUnion) -> Self::Output {
+        let mut members = Vec::new();
+        for member in node.members().iter() {
+            members.push(self.visit_type_info(member));
+        }
+        Type::Union(types::UnionType {
+            span: node.span(),
+            members,
+        })
+    }
 }
 
 impl<'a> ExprVisitor<'a> for Binder<'a> {

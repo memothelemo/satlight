@@ -71,6 +71,17 @@ where
             .and_then(|v| self.entries.get(v).as_ref().map(|v| &v.1))
     }
 
+    pub fn get_mut(&mut self, key: &K) -> Option<&mut V> {
+        let id = self.id_from_key(key);
+        if let Some(v) = id {
+            let entry = self.entries.get_mut(v);
+            if let Some(entry) = entry {
+                return Some(&mut entry.1);
+            }
+        }
+        None
+    }
+
     pub fn get_retrieve_id(&self, key: &K) -> Option<(usize, &V)> {
         self.id_from_key(key)
             .and_then(|id| self.entries.get(id).as_ref().map(|v| (id, &v.1)))

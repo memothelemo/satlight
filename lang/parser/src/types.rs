@@ -18,8 +18,9 @@ parser_struct!(
     }
 );
 
-pub struct ParseTypeInfo;
-parser_struct!(ParseTypeInfo, ast::TypeInfo, |_, state: &ParseState<'a>| {
+pub struct ParseBaseTypeInfo;
+#[rustfmt::skip]
+parser_struct!(ParseBaseTypeInfo, ast::TypeInfo, |_, state: &ParseState<'a,>| {
     parse_either!(state, {
         ParseTypeCallback => ast::TypeInfo::Callback,
         ParseTypeReference => ast::TypeInfo::Reference,
@@ -27,6 +28,35 @@ parser_struct!(ParseTypeInfo, ast::TypeInfo, |_, state: &ParseState<'a>| {
         ParseTypeMetatable => ast::TypeInfo::Metatable,
         ParseTypeTuple => ast::TypeInfo::Tuple,
     })
+});
+
+pub struct ParseTypeInfo;
+parser_struct!(ParseTypeInfo, ast::TypeInfo, |_, state: &ParseState<'a>| {
+    let (mut state, mut base) = ParseBaseTypeInfo.parse(state)?;
+    loop {
+        if let Ok((new_state, _)) = ParseSymbol(ast::SymbolType::VerticalBar).parse(&state) {
+            // parse all the way!
+            let (new_state, (span, mut members)) =
+                TypeConjoined(ParseSymbol(ast::SymbolType::VerticalBar), base.span())
+                    .parse(&new_state)?;
+
+            members.insert(0, base);
+            base = ast::TypeInfo::Union(ast::TypeUnion::new(span, members));
+            state = new_state;
+        } else if let Ok((new_state, _)) = ParseSymbol(ast::SymbolType::Ampersand).parse(&state) {
+            // parse all the way!
+            let (new_state, (span, mut members)) =
+                TypeConjoined(ParseSymbol(ast::SymbolType::Ampersand), base.span())
+                    .parse(&new_state)?;
+
+            members.insert(0, base);
+            base = ast::TypeInfo::Intersection(ast::TypeIntersection::new(span, members));
+            state = new_state;
+        } else {
+            break;
+        }
+    }
+    Ok((state, base))
 });
 
 pub struct ParseTypeTuple;
