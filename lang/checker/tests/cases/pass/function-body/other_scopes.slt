@@ -1,4 +1,0 @@
-local a = "Hi"
-local b = function()
-	local c: string = a
-end

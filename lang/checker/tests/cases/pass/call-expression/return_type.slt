@@ -1,4 +1,0 @@
-local cool = function(value: string) -> number
-	return 0
-end
-local no: number = cool("a")

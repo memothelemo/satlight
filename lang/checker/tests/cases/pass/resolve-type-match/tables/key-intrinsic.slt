@@ -1,9 +1,0 @@
-type A = {
-	[string]: number,
-	[number]: string,
-}
-local sample: A = {
-	["op"] = 10,
-	[34] = "35",
-	a = 1
-}

@@ -1,6 +1,0 @@
-type Meta = @metatable {
-	__index: string,
-}
-local that: Meta = {
-	__index = "Hi"
-}

@@ -1,4 +1,0 @@
-local foo = function(value: string) -> string
-	return "bar"
-end
-foo(10)

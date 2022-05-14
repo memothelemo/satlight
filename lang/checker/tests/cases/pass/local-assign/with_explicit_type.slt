@@ -1,3 +1,0 @@
--- Test = with explicit type
-type String = string
-local my_string: String = ""

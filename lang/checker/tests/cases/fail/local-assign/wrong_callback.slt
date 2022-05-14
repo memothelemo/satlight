@@ -1,4 +1,0 @@
-type Callback = (value: string) -> number
-local that: Callback = function(value: number) -> string
-	return "Hi"
-end

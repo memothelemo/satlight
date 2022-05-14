@@ -1,2 +1,0 @@
-type T<A: string, B: number> = B;
-type B = T<string>;

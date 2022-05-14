@@ -1,4 +1,0 @@
-type A = { name: string } & { value: number }
-local a: A = {
-	name = "Hi"
-}

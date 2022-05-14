@@ -1,3 +1,0 @@
--- Test = Type reference solving
-type T<A: string> = A
-local sample: T<string> = ""

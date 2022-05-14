@@ -1,3 +1,0 @@
-type Type = string | number
-local a: Type = "a"
-local b: Type = 10
