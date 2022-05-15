@@ -7,6 +7,8 @@ mod logger;
 
 fn compile() -> Result<()> {
     log::info!("Initializing project");
+
+    let now = std::time::Instant::now();
     let mut project = salite::env::project::from_dir(".").with_context(|| {
         format!(
             "Failed to load project from current directory: {}",
@@ -17,7 +19,6 @@ fn compile() -> Result<()> {
     project
         .reload()
         .with_context(|| "Failed to reload project")?;
-    let now = std::time::Instant::now();
 
     #[allow(unused)]
     let files = match salite::env::parse_project(&project) {
