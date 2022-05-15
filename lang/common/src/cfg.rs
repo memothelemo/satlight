@@ -18,6 +18,10 @@ pub enum ConfigError {
 /// Compiler configuration contents for the Salite project object.
 #[derive(Debug, Default, PartialEq, Deserialize)]
 pub struct ConfigInfo {
+    /// How many threads does the compiler has to take advantage?
+    #[serde(rename = "maxThreads")]
+    pub max_threads: Option<usize>,
+
     /// The entire directory must be mostly filled with
     /// Salite source files
     #[serde(rename = "sourceDir")]

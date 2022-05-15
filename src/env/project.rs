@@ -7,7 +7,10 @@ use std::{
 use thiserror::Error;
 use walkdir::WalkDir;
 
-use salitescript::common::{Config, ConfigError};
+use salitescript::{
+    checker::EnvContext,
+    common::{Config, ConfigError},
+};
 
 /// Errors given when loading or doing something with Salite project.
 #[derive(Debug, Error)]
@@ -49,6 +52,27 @@ impl Project {
             files: HashMap::new(),
             root,
         }
+    }
+
+    /// Checks every source files
+    pub fn check<'a>(
+        &self,
+        parsed: &'a HashMap<PathBuf, salitescript::ast::File>,
+    ) -> EnvContext<'_, 'a> {
+        let mut env = EnvContext::new(self.config());
+
+        let now = std::time::Instant::now();
+        for (file_path, _) in self.files.iter() {
+            env.add_module(file_path, parsed.get(file_path).unwrap());
+        }
+
+        let elapsed = now.elapsed();
+        log::debug!(
+            "Checking all files without multithreading took {:.2?}",
+            elapsed
+        );
+
+        env
     }
 
     fn gather_source_file_paths(&self) -> Result<Vec<PathBuf>, ProjectError> {

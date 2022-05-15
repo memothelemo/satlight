@@ -8,9 +8,17 @@ use std::{
 /// It almost functions the same as the other programming languages.
 ///
 /// Think of `HashMap` but without hash stuff involved.
-#[derive(Default, Clone)]
+#[derive(Clone)]
 pub struct Dictionary<K, V> {
     entries: Vec<(K, V)>,
+}
+
+impl<K, V> Default for Dictionary<K, V> {
+    fn default() -> Self {
+        Self {
+            entries: Vec::new(),
+        }
+    }
 }
 
 impl<K, V> std::fmt::Debug for Dictionary<K, V>
@@ -44,6 +52,12 @@ where
     pub fn new() -> Self {
         Self {
             entries: Vec::new(),
+        }
+    }
+
+    pub fn extend(&mut self, other: Self) {
+        for entry in other.entries {
+            self.insert(entry.0, entry.1);
         }
     }
 
@@ -97,10 +111,9 @@ where
     }
 
     pub fn insert(&mut self, key: K, value: V) {
-        // optimizations: we can replace the entry if it does exists
         match self.id_from_key(&key) {
             Some(id) => self.entries.get_mut(id).unwrap().1 = value,
-            None => self.entries.push((key, value)),
+            None => {}
         }
     }
 

@@ -2,6 +2,7 @@
 #![allow(clippy::large_enum_variant)]
 #![allow(clippy::new_without_default)]
 #![allow(dead_code)]
+#![feature(ptr_const_cast)]
 
 //! # Salite
 //!

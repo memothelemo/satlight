@@ -5,3 +5,4 @@ mod cfg;
 
 pub use cfg::*;
 pub mod dictionary;
+pub mod memory;

@@ -21,7 +21,7 @@ pub use salite_traits::SpannedNode;
 
 use salite_macros::{CtorCall, FieldCall};
 
-pub trait Node: Debug {
+pub trait Node: Debug + Sync + Send {
     fn as_expr(&self) -> Option<Expr>;
     fn as_stmt(&self) -> Option<Stmt>;
 }

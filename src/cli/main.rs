@@ -7,7 +7,6 @@ mod logger;
 
 fn compile() -> Result<()> {
     log::info!("Initializing project");
-    let now = std::time::Instant::now();
     let mut project = salite::env::project::from_dir(".").with_context(|| {
         format!(
             "Failed to load project from current directory: {}",
@@ -18,6 +17,7 @@ fn compile() -> Result<()> {
     project
         .reload()
         .with_context(|| "Failed to reload project")?;
+    let now = std::time::Instant::now();
 
     #[allow(unused)]
     let files = match salite::env::parse_project(&project) {
@@ -37,31 +37,9 @@ fn compile() -> Result<()> {
     let elapsed = now.elapsed();
     log::info!("Took to initialize project: {:.2?}", elapsed);
 
-    // for (file_path, file) in files.into_iter() {
-    //     use salite::checker::{analyzer, binder};
-    //     log::info!("Checking file: {}", file_path.to_string_lossy());
-
-    //     let now = std::time::Instant::now();
-    //     let (binder, block) = binder::Binder::new(&file);
-    //     let elapsed = now.elapsed();
-    //     log::debug!("Took to bind the source file: {:.2?}", elapsed);
-
-    //     let now = std::time::Instant::now();
-    //     analyzer::Analyzer::analyze(&binder, project.config(), &block).map_err(|err| {
-    //         anyhow!(format!(
-    //             "{}:{}: {}",
-    //             file_path.to_string_lossy(),
-    //             Position::from_offset(
-    //                 err.span().start,
-    //                 &project.get_source_code(&file_path).unwrap()
-    //             ),
-    //             err
-    //         ))
-    //     })?;
-    //     let elapsed = now.elapsed();
-    //     log::debug!("Took to typecheck file: {:.2?}", elapsed);
-    // }
-
+    #[allow(unused)]
+    // let env = project.check(&files);
+    // println!("{:#?}", env);
     Ok(())
 }
 
