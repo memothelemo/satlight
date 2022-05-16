@@ -19,7 +19,7 @@ jobs:
         run: rustup default nightly
 
       - name: Build release binary
-        run: cargo build --verbose --release
+        run: cargo build --verbose --release --features multithreading
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v1
@@ -44,7 +44,7 @@ jobs:
       - name: Build release binary
         run: |
           source $HOME/.cargo/env
-          cargo build --verbose --release
+          cargo build --verbose --release --features multithreading
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v1
@@ -63,7 +63,7 @@ jobs:
         run: rustup default nightly
 
       - name: Build
-        run: cargo build --verbose --release
+        run: cargo build --verbose --release --features multithreading
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v1
