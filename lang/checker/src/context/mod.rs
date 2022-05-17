@@ -1,11 +1,11 @@
 mod scope;
 mod symbol;
 
-use std::path::PathBuf;
+use std::{path::PathBuf, sync::Arc};
 
 use id_arena::Arena;
 use salite_ast::Node;
-use salite_common::{dictionary::Dictionary, memory::SafePtr, Config as ProjectCfg};
+use salite_common::{memory::SafePtr, Config as ProjectCfg};
 
 pub use scope::*;
 pub use symbol::*;
@@ -14,7 +14,7 @@ use crate::{hir, Diagnostic, DiagnosticLevel, Transformer};
 
 #[derive(Debug)]
 pub struct ModuleResult<'a, 'b> {
-    pub ctx: ModuleContext<'a, 'b>,
+    pub ctx: Arc<ModuleContext<'a, 'b>>,
     pub file: hir::File<'b>,
 }
 
@@ -29,6 +29,18 @@ unsafe impl<'a, 'b> std::marker::Send for EnvContext<'a, 'b> {}
 unsafe impl<'a, 'b> std::marker::Sync for EnvContext<'a, 'b> {}
 
 impl<'a, 'b> EnvContext<'a, 'b> {
+    pub fn cfg(&self) -> &'a ProjectCfg {
+        self.cfg
+    }
+
+    pub fn modules_mut(&mut self) -> &mut Vec<(PathBuf, ModuleResult<'a, 'b>)> {
+        &mut self.modules
+    }
+
+    pub fn modules(&self) -> &Vec<(PathBuf, ModuleResult<'a, 'b>)> {
+        &self.modules
+    }
+
     pub fn new(cfg: &'a ProjectCfg) -> Self {
         Self {
             cfg,
@@ -38,16 +50,21 @@ impl<'a, 'b> EnvContext<'a, 'b> {
 
     pub fn add_module(
         &mut self,
-        path: &PathBuf,
+        path: PathBuf,
         file: &'b salite_ast::File,
     ) -> &ModuleResult<'a, 'b> {
         let ptr = SafePtr::from_ptr(self as *mut _);
-        let mut ctx = ModuleContext::new(ptr, Some(path.clone()));
+        let mut ctx = ModuleContext::new(*file.declaration(), ptr, Some(path.clone()));
         let file = Transformer::transform(SafePtr::from_ptr(&mut ctx as *mut _), file);
-        self.modules
-            .push((path.clone(), ModuleResult { ctx, file }));
+        self.modules.push((
+            path.clone(),
+            ModuleResult {
+                ctx: Arc::new(ctx),
+                file,
+            },
+        ));
 
-        self.get_module_result(path).unwrap()
+        self.get_module_result(&path).unwrap()
     }
 
     pub fn get_module_result(&self, path: &PathBuf) -> Option<&ModuleResult<'a, 'b>> {
@@ -60,8 +77,8 @@ impl<'a, 'b> EnvContext<'a, 'b> {
     }
 }
 
-#[derive(Debug)]
 pub struct ModuleContext<'env, 'node> {
+    pub(crate) declaration: bool,
     pub(crate) diagnostics: Vec<Diagnostic>,
     pub(crate) env: SafePtr<EnvContext<'env, 'node>>,
     pub(crate) file_path: Option<PathBuf>,
@@ -70,10 +87,27 @@ pub struct ModuleContext<'env, 'node> {
     pub(crate) symbols: Arena<Symbol>,
 }
 
+impl<'a, 'b> std::fmt::Debug for ModuleContext<'a, 'b> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("ModuleContext")
+            .field("diagnostics", &self.diagnostics)
+            .field("env", &self.env)
+            .field("file_path", &self.file_path)
+            .field("scopes", &self.scopes)
+            .field("symbols", &self.symbols)
+            .finish()
+    }
+}
+
 impl<'env, 'node> ModuleContext<'env, 'node> {
-    pub fn new(env: SafePtr<EnvContext<'env, 'node>>, file_path: Option<PathBuf>) -> Self {
+    pub fn new(
+        declaration: bool,
+        env: SafePtr<EnvContext<'env, 'node>>,
+        file_path: Option<PathBuf>,
+    ) -> Self {
         Self {
             env,
+            declaration,
             diagnostics: Vec::new(),
             file_path,
             scopes: Arena::new(),

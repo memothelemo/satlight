@@ -8,8 +8,8 @@ mod stmts;
 mod types;
 
 pub use exprs::*;
-use salite_traits::SpannedNode;
 pub use others::*;
+use salite_traits::SpannedNode;
 pub use stmts::*;
 pub use types::*;
 
@@ -50,15 +50,15 @@ pub trait Parser<'a> {
 }
 
 /// Parses into an AST file with state required for manual flexibility
-pub fn parse_file_raw(state: &ParseState<'_>) -> Result<ast::File, ParseError> {
+pub fn parse_file_raw(declaration: bool, state: &ParseState<'_>) -> Result<ast::File, ParseError> {
     match ParseBlock.parse(state) {
-        Ok((_, block)) => Ok(ast::File::new(block.span(), block)),
+        Ok((_, block)) => Ok(ast::File::new(declaration, block.span(), block)),
         Err(err) => Err(err),
     }
 }
 
 /// Parses into an AST file with tokens required for complete parsing
-pub fn parse_file(tokens: &[ast::Token]) -> Result<ast::File, ParseError> {
+pub fn parse_file(declaration: bool, tokens: &[ast::Token]) -> Result<ast::File, ParseError> {
     let state = ParseState::new(tokens);
-    parse_file_raw(&state)
+    parse_file_raw(declaration, &state)
 }

@@ -49,8 +49,8 @@ impl errors::SaliteError for LazyParseError {
 /// Parses any file with a source code parameter accepted. This is meant
 /// to lazily parse without any setups required.
 #[cfg(any(feature = "lazy_parse", feature = "full"))]
-pub fn lazy_parse(input: &str) -> Result<ast::File, LazyParseError> {
+pub fn lazy_parse(declaration: bool, input: &str) -> Result<ast::File, LazyParseError> {
     let tokens = tokenizer::tokenize(input).map_err(LazyParseError::TokenizeError)?;
     let tokens = ast::filter_non_trivia_tokens(tokens);
-    parser::parse_file(&tokens).map_err(LazyParseError::ParseError)
+    parser::parse_file(declaration, &tokens).map_err(LazyParseError::ParseError)
 }

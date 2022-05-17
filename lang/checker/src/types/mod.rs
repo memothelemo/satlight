@@ -160,7 +160,7 @@ pub mod variants {
     #[derive(Debug, Clone)]
     pub struct FunctionParameter {
         pub span: Span,
-        pub name: Option<String>,
+        pub name: String,
         pub optional: bool,
         pub typ: Type,
     }

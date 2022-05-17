@@ -1,4 +1,5 @@
 use super::*;
+use crate::types::Type;
 use id_arena::Id;
 use salite_common::dictionary::Dictionary;
 
@@ -7,6 +8,7 @@ pub enum ScopeKind {
     Module,
     Block,
     Function,
+    TypeAliasDeclaration,
 }
 
 #[derive(Debug, Default)]
@@ -27,6 +29,9 @@ impl ConditionFacts {
 pub struct Scope {
     pub(crate) facts: ConditionFacts,
 
+    pub(crate) actual_type: Option<Type>,
+    pub(crate) expected_type: Option<Type>,
+
     pub(crate) kind: ScopeKind,
     pub(crate) parent: Option<Id<Scope>>,
 
@@ -37,6 +42,8 @@ pub struct Scope {
 impl Default for Scope {
     fn default() -> Self {
         Self {
+            actual_type: None,
+            expected_type: None,
             facts: Default::default(),
             kind: ScopeKind::Module,
             parent: None,

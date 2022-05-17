@@ -28,6 +28,7 @@ pub trait Node: Debug + Sync + Send {
 
 #[derive(Debug, Clone, PartialEq, CtorCall, FieldCall)]
 pub struct File {
+    declaration: bool,
     span: Span,
     block: Block,
 }

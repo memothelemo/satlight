@@ -10,6 +10,10 @@ pub struct SafePtr<T> {
     ptr: *mut T,
 }
 
+impl<T> Drop for SafePtr<T> {
+    fn drop(&mut self) {}
+}
+
 unsafe impl<T> std::marker::Sync for SafePtr<T> {}
 
 unsafe impl<T> std::marker::Send for SafePtr<T> {}
@@ -33,8 +37,6 @@ impl<T> DerefMut for SafePtr<T> {
         self.get_mut()
     }
 }
-
-impl<T> Copy for SafePtr<T> {}
 
 impl<T: std::fmt::Debug> std::fmt::Debug for SafePtr<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -65,6 +67,9 @@ impl<T> SafePtr<T> {
 
     pub fn get(&self) -> &T {
         unsafe {
+            if self.ptr.is_null() {
+                panic!("null pointer detected!");
+            }
             match self.ptr.as_ref() {
                 Some(v) => v,
                 None => panic!("failed to read pointer"),
@@ -75,6 +80,9 @@ impl<T> SafePtr<T> {
     #[allow(clippy::mut_from_ref)]
     pub fn get_mut(&self) -> &mut T {
         unsafe {
+            if self.ptr.is_null() {
+                panic!("null pointer detected!");
+            }
             match self.ptr.as_mut() {
                 Some(v) => v,
                 None => panic!("failed to read pointer"),

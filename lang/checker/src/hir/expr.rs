@@ -19,7 +19,7 @@ impl<'a> Expr<'a> {
         match self {
             Expr::Call(node) => match node.base.typ() {
                 Type::Function(n) => n.return_type.borrow(),
-                _ => node.procrast_type.as_ref().unwrap(),
+                c => c,
             },
             Expr::Function(node) => &node.typ,
             Expr::Literal(node) => &node.typ,
@@ -79,7 +79,6 @@ impl<'a> LibraryExpr<'a> {
 #[derive(Debug, Clone)]
 pub struct Call<'a> {
     pub span: Span,
-    pub procrast_type: Option<Type>,
     pub base: Box<Expr<'a>>,
     pub arguments: Vec<Expr<'a>>,
 }

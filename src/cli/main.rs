@@ -1,7 +1,12 @@
+#![feature(ptr_const_cast)]
 use std::env;
 
 use anyhow::{Context, Result};
 use log::SetLoggerError;
+use salite::{
+    checker::{Analyzer, EnvContext, Resolver},
+    common::memory::SafePtr,
+};
 
 mod logger;
 
@@ -21,7 +26,7 @@ fn compile() -> Result<()> {
         .with_context(|| "Failed to reload project")?;
 
     #[allow(unused)]
-    let files = match salite::env::parse_project(&project) {
+    let mut files = match salite::env::parse_project(&project) {
         Ok(files) => files,
         Err(errors) => {
             let elapsed = now.elapsed();
@@ -38,9 +43,28 @@ fn compile() -> Result<()> {
     let elapsed = now.elapsed();
     log::info!("Took to initialize project: {:.2?}", elapsed);
 
-    #[allow(unused)]
-    // let env = project.check(&files);
-    // println!("{:#?}", env);
+    let mut env = project.check(&files);
+    let env_ptr = SafePtr::from_ptr(&mut env as *mut EnvContext);
+
+    let now = std::time::Instant::now();
+    for (file_path, module) in env.modules_mut().iter_mut() {
+        Resolver::from_result(module, env_ptr.clone())
+            .with_context(|| format!("Failed to check file: {}", file_path.to_string_lossy()))?;
+    }
+
+    let elapsed = now.elapsed();
+    log::info!("Took to resolve entire project source: {:.2?}", elapsed);
+
+    let now = std::time::Instant::now();
+    for (file_path, module) in env.modules().iter() {
+        Analyzer::analyze(module.ctx.clone(), &module.file).with_context(|| {
+            format!("Failed to typecheck file: {}", file_path.to_string_lossy())
+        })?;
+    }
+    let elapsed = now.elapsed();
+
+    log::info!("Took to resolve analyze project source: {:.2?}", elapsed);
+
     Ok(())
 }
 

@@ -3,6 +3,44 @@ use crate::types::Type;
 use super::*;
 use ast::SpannedNode;
 
+impl<'a, 'b> Transform<'a, 'b> for ast::LocalFunction {
+    type Output = hir::Stmt<'b>;
+
+    fn transform(&'b self, tfmr: &mut Transformer<'a, 'b>) -> Self::Output {
+        let name = self.name().ty().as_name();
+        let node_id = tfmr.ctx.nodes.alloc(self);
+
+        let body = transform_function_body(tfmr, self.body(), self.span(), node_id);
+
+        let symbol_id = tfmr.insert_variable(
+            &name,
+            SymbolKind::BlockVariable(BlockVariableSymbol {
+                name: name.to_string(),
+                explicit: false,
+                typ: body.typ.clone(),
+            }),
+            Some(self.span()),
+        );
+
+        let stmt = hir::Stmt::LocalAssign(hir::LocalAssign {
+            variables: vec![hir::LocalAssignVar {
+                name,
+                name_span: self.name().span(),
+                name_symbol: symbol_id,
+                explicit_type: None,
+                expr_id: 0,
+                expr_source: Some(body.span),
+                expr: Some(body.typ.clone()),
+            }],
+            span: self.span(),
+            node_id: body.node_id,
+            exprs: vec![hir::Expr::Function(body)],
+        });
+
+        stmt
+    }
+}
+
 impl<'a, 'b> Transform<'a, 'b> for ast::LocalAssign {
     type Output = hir::Stmt<'b>;
 
@@ -31,6 +69,7 @@ impl<'a, 'b> Transform<'a, 'b> for ast::LocalAssign {
             let symbol_id = tfmr.insert_variable(
                 &real_name,
                 SymbolKind::BlockVariable(BlockVariableSymbol {
+                    name: real_name.to_string(),
                     typ: expr.clone().unwrap_or(types::makers::any(name.span())),
                     explicit: name.type_info().is_some(),
                 }),

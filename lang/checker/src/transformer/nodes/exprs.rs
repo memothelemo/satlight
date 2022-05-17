@@ -1,22 +1,30 @@
 use super::*;
 
+mod arys;
 mod assertion;
-mod literal;
 
+#[macro_use]
+mod literal;
+mod suffixed;
+
+pub use arys::*;
 pub use assertion::*;
+
+#[allow(unused)]
 pub use literal::*;
+pub use suffixed::*;
 
 impl<'a, 'b> Transform<'a, 'b> for ast::Expr {
     type Output = hir::Expr<'b>;
 
     fn transform(&'b self, tfmr: &mut Transformer<'a, 'b>) -> Self::Output {
         match self {
-            ast::Expr::Binary(_) => todo!(),
+            ast::Expr::Binary(node) => node.transform(tfmr),
             ast::Expr::Literal(node) => node.transform(tfmr),
             ast::Expr::Paren(node) => node.transform(tfmr),
-            ast::Expr::Suffixed(_) => todo!(),
+            ast::Expr::Suffixed(node) => node.transform(tfmr),
             ast::Expr::TypeAssertion(node) => node.transform(tfmr),
-            ast::Expr::Unary(_) => todo!(),
+            ast::Expr::Unary(node) => node.transform(tfmr),
         }
     }
 }

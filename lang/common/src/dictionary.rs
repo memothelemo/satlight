@@ -111,9 +111,8 @@ where
     }
 
     pub fn insert(&mut self, key: K, value: V) {
-        match self.id_from_key(&key) {
-            Some(id) => self.entries.get_mut(id).unwrap().1 = value,
-            None => {}
+        if self.id_from_key(&key).is_none() {
+            self.entries.push((key, value));
         }
     }
 

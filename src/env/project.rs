@@ -2,7 +2,7 @@ use super::*;
 
 use std::{
     collections::{HashMap, VecDeque},
-    path::{self, PathBuf},
+    path::{self, Path, PathBuf},
 };
 use thiserror::Error;
 use walkdir::WalkDir;
@@ -41,7 +41,7 @@ pub enum ProjectError {
 #[derive(Debug)]
 pub struct Project {
     config: Config,
-    files: HashMap<PathBuf, SourceFile>,
+    files: HashMap<FilePath, SourceFile>,
     root: PathBuf,
 }
 
@@ -57,25 +57,46 @@ impl Project {
     /// Checks every source files
     pub fn check<'a>(
         &self,
-        parsed: &'a HashMap<PathBuf, salitescript::ast::File>,
+        parsed: &'a HashMap<FilePath, salitescript::ast::File>,
     ) -> EnvContext<'_, 'a> {
-        let mut env = EnvContext::new(self.config());
+        let env = EnvContext::new(self.config());
+        let env_arc = Arc::new(Mutex::new(env));
+        let env = Arc::clone(&env_arc);
+
+        let threads = self.config().get().max_threads.unwrap_or(num_cpus::get());
 
         let now = std::time::Instant::now();
-        for (file_path, _) in self.files.iter() {
-            env.add_module(file_path, parsed.get(file_path).unwrap());
-        }
+        let pool = ThreadPoolBuilder::new()
+            .num_threads(threads)
+            .build()
+            .unwrap();
+
+        pool.scope(move |s| {
+            for (file_path, _) in self.files.iter() {
+                let env_arc = Arc::clone(&env_arc);
+                s.spawn(move |_| {
+                    env_arc.lock().unwrap().add_module(
+                        match file_path.to_buf() {
+                            Some(p) => p,
+                            None => PathBuf::new(),
+                        },
+                        parsed.get(file_path).unwrap(),
+                    );
+                });
+            }
+        });
 
         let elapsed = now.elapsed();
         log::debug!(
-            "Checking all files without multithreading took {:.2?}",
+            "Checking all files with {} threads took {:.2?}",
+            threads,
             elapsed
         );
 
-        env
+        Arc::try_unwrap(env).unwrap().into_inner().unwrap()
     }
 
-    fn gather_source_file_paths(&self) -> Result<Vec<PathBuf>, ProjectError> {
+    fn gather_source_file_paths(&self) -> Result<Vec<(FilePath, bool)>, ProjectError> {
         // output of source files
         let mut results = Vec::new();
 
@@ -95,8 +116,24 @@ impl Project {
 
             let file_path = entry.path();
             if let Some(file_ext) = file_path.extension() {
-                if file_ext == "slt" {
-                    results.push(file_path.to_path_buf());
+                let (is_found, is_declaration) = if file_ext == "slt" {
+                    (
+                        true,
+                        file_path
+                            .file_name()
+                            .unwrap()
+                            .to_str()
+                            .unwrap()
+                            .ends_with("d.slt"),
+                    )
+                } else {
+                    (false, false)
+                };
+                if is_found {
+                    results.push((
+                        FilePath::Filesystem(file_path.to_path_buf()),
+                        is_declaration,
+                    ));
                 }
             }
         }
@@ -111,15 +148,17 @@ impl Project {
 
         // gather all of the current source files
         let current_files = self.gather_source_file_paths()?;
-        for file_path in current_files.iter() {
+
+        for (file_path, declaration) in current_files.iter() {
             if let Some(source_file) = self.files.get_mut(file_path) {
                 source_file.reload().map_err(|e| {
-                    ProjectError::SourceFileReload(source_file.path().to_path_buf(), e)
+                    ProjectError::SourceFileReload(source_file.path().to_buf().unwrap(), e)
                 })?;
             } else {
                 self.files.insert(
-                    file_path.to_path_buf(),
-                    SourceFile::new(file_path).map_err(ProjectError::IO)?,
+                    file_path.clone(),
+                    SourceFile::from_unknown_variant(*declaration, file_path.clone(), None)
+                        .map_err(ProjectError::IO)?,
                 );
             }
         }
@@ -128,9 +167,18 @@ impl Project {
         let deleted_files_queue = self
             .files
             .keys()
-            .filter(|v| !current_files.contains(v))
-            .map(|v| v.to_path_buf())
-            .collect::<Vec<PathBuf>>();
+            .filter(|v| {
+                let mut res = true;
+                for (file_path, ..) in current_files.iter() {
+                    if !file_path.eq(v) {
+                        res = false;
+                        break;
+                    }
+                }
+                res
+            })
+            .cloned()
+            .collect::<Vec<FilePath>>();
 
         for file_path in deleted_files_queue {
             self.files.remove(&file_path);
@@ -155,8 +203,10 @@ impl Project {
     }
 
     /// Gets the source code of the specific file path
-    pub fn get_source_code(&self, path: &PathBuf) -> Option<String> {
-        self.files.get(path).map(|v| v.contents().to_string())
+    pub fn get_source_code(&self, path: &Path) -> Option<String> {
+        self.files
+            .get(&FilePath::Filesystem(path.to_path_buf()))
+            .map(|v| v.contents().to_string())
     }
 }
 
