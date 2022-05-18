@@ -1,0 +1,5 @@
+type A = {
+	a: string,
+	b: number,
+}
+local sample: A = {}

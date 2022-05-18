@@ -1,0 +1,4 @@
+local function that() -> number
+	return 10
+end
+local a: number = that()

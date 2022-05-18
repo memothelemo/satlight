@@ -1,0 +1,9 @@
+type A = {
+	name: string,
+} & {
+	value: string,
+}
+local a: A = {
+	name = "",
+	value = "",
+}

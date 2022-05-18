@@ -6,26 +6,27 @@ use std::borrow::Borrow;
 
 #[derive(Debug, Clone)]
 pub enum Expr<'a> {
-    Call(Call<'a>),
     Function(Function<'a>),
     Library(LibraryExpr<'a>),
     Literal(Literal<'a>),
     TypeAssertion(TypeAssertion<'a>),
     Table(Table<'a>),
+    Suffixed(Suffixed<'a>),
 }
 
 impl<'a> Expr<'a> {
     pub fn typ(&self) -> &Type {
         match self {
-            Expr::Call(node) => match node.base.typ() {
-                Type::Function(n) => n.return_type.borrow(),
-                c => c,
-            },
+            // Expr::Call(node) => match node.base.typ() {
+            //     Type::Function(n) => n.return_type.borrow(),
+            //     c => c,
+            // },
             Expr::Function(node) => &node.typ,
             Expr::Literal(node) => &node.typ,
             Expr::TypeAssertion(node) => &node.cast,
             Expr::Table(node) => &node.typ,
             Expr::Library(node) => node.typ(),
+            Expr::Suffixed(node) => node.typ(),
         }
     }
 
@@ -35,8 +36,8 @@ impl<'a> Expr<'a> {
             Expr::Literal(node) => node.span,
             Expr::TypeAssertion(node) => node.span,
             Expr::Table(node) => node.span,
-            Expr::Call(node) => node.span,
             Expr::Library(node) => node.span(),
+            Expr::Suffixed(node) => node.span,
         }
     }
 
@@ -44,6 +45,29 @@ impl<'a> Expr<'a> {
         match self {
             Expr::Literal(node) => node.symbol,
             _ => None,
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub enum SuffixKind<'a> {
+    Call(Vec<Expr<'a>>),
+}
+
+#[derive(Debug, Clone)]
+pub struct Suffixed<'a> {
+    pub span: Span,
+    pub base: Box<Expr<'a>>,
+    pub kind: SuffixKind<'a>,
+}
+
+impl<'a> Suffixed<'a> {
+    pub fn typ(&self) -> &Type {
+        match &self.kind {
+            SuffixKind::Call(..) => match self.base.typ() {
+                Type::Function(n) => n.return_type.borrow(),
+                c => c,
+            },
         }
     }
 }
@@ -74,13 +98,6 @@ impl<'a> LibraryExpr<'a> {
             LibraryExpr::SetMetatable(node) => node.span,
         }
     }
-}
-
-#[derive(Debug, Clone)]
-pub struct Call<'a> {
-    pub span: Span,
-    pub base: Box<Expr<'a>>,
-    pub arguments: Vec<Expr<'a>>,
 }
 
 #[derive(Debug, Clone)]

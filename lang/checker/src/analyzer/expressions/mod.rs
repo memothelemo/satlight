@@ -1,11 +1,13 @@
 use super::*;
 
-mod call;
 mod function;
+mod suffixed;
 mod table;
 
-pub use call::*;
 pub use function::*;
+
+#[allow(unused)]
+pub use suffixed::*;
 pub use table::*;
 
 impl<'a, 'b> Validate<'a, 'b> for hir::Expr<'b> {
@@ -17,7 +19,7 @@ impl<'a, 'b> Validate<'a, 'b> for hir::Expr<'b> {
             hir::Expr::TypeAssertion(node) => node.validate(analyzer),
             hir::Expr::Table(node) => node.validate(analyzer),
             hir::Expr::Function(node) => node.validate(analyzer),
-            hir::Expr::Call(node) => node.validate(analyzer),
+            hir::Expr::Suffixed(node) => node.validate(analyzer),
             hir::Expr::Library(..) => todo!(),
         }
     }

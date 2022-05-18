@@ -3,5 +3,5 @@
 /Cargo.lock
 
 # Test suite
-/lang/checker/tests/cases/**/*.error
-*.result
+/test-suite/samples/**/*.error
+/test-suite/samples/**/*.result

@@ -67,6 +67,15 @@ impl<'a, 'b> EnvContext<'a, 'b> {
         self.get_module_result(&path).unwrap()
     }
 
+    pub fn get_module_result_mut(&mut self, path: &PathBuf) -> Option<&mut ModuleResult<'a, 'b>> {
+        for (entry_path, result) in self.modules.iter_mut() {
+            if entry_path == path {
+                return Some(result);
+            }
+        }
+        None
+    }
+
     pub fn get_module_result(&self, path: &PathBuf) -> Option<&ModuleResult<'a, 'b>> {
         for (entry_path, result) in self.modules.iter() {
             if entry_path == path {

@@ -1,0 +1,13 @@
+type That = {
+	len: (a: number) -> number,
+} & {
+	concat: () -> string,
+}
+local cool: That = {
+	len = function()
+		return 1
+	end,
+	concat = function()
+		return ""
+	end,
+}

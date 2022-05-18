@@ -1,5 +1,5 @@
 [workspace]
-members = ["lang/*"]
+members = ["lang/*", "test-suite/"]
 
 [features]
 multithreading = []

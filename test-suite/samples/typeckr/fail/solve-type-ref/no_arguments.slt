@@ -1,0 +1,2 @@
+type T<A: string> = A;
+type B = T;

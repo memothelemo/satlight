@@ -14,7 +14,7 @@ impl<'a, 'b> Transform<'a, 'b> for ast::Stmt {
     fn transform(&'b self, tfmr: &mut Transformer<'a, 'b>) -> Self::Output {
         match self {
             ast::Stmt::Call(node) => match node.transform(tfmr) {
-                hir::Expr::Call(node) => hir::Stmt::Call(node),
+                hir::Expr::Suffixed(node) => hir::Stmt::Call(node),
                 hir::Expr::Library(node) => hir::Stmt::Library(node),
                 _ => unreachable!(),
             },

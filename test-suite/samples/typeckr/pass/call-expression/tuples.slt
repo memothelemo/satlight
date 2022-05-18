@@ -1,0 +1,9 @@
+type SquareTable = {
+	name: string,
+}
+
+local callback = function()
+	return 1, "hi", { name = "Square" }
+end
+
+local a: number, b: string, c: SquareTable = callback()

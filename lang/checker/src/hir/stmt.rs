@@ -20,7 +20,7 @@ pub struct Return<'a> {
 
 #[derive(Debug, Clone)]
 pub enum Stmt<'a> {
-    Call(Call<'a>),
+    Call(Suffixed<'a>),
     Library(LibraryExpr<'a>),
     LocalAssign(LocalAssign<'a>),
     TypeDeclaration(TypeDeclaration<'a>),

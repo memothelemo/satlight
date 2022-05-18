@@ -1,0 +1,3 @@
+local function that() end
+local cool: () -> any = that
+local a: number = cool()

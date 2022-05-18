@@ -1,0 +1,4 @@
+type Callback = (string) -> number
+local callback: Callback = function(str)
+	return 12
+end

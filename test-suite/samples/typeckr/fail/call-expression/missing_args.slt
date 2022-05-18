@@ -1,0 +1,3 @@
+local callback = function(value: string)
+end
+callback()

@@ -31,9 +31,9 @@ pub(crate) fn visit_call_expr_inner<'a, 'b>(
         ast::Args::Str(arg) => arguments.push(literal!(arg, tfmr, node, string)),
     };
 
-    hir::Expr::Call(hir::Call {
+    hir::Expr::Suffixed(hir::Suffixed {
         span: node.span(),
         base: Box::new(base),
-        arguments,
+        kind: hir::SuffixKind::Call(arguments),
     })
 }

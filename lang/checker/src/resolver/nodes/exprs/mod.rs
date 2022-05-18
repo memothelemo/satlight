@@ -1,16 +1,40 @@
 use super::*;
 
-impl<'a, 'b> ResolveMut<'a, 'b> for hir::Call<'b> {
+impl<'a, 'b> ResolveMut<'a, 'b> for hir::SuffixKind<'b> {
+    type Output = ();
+
+    fn resolve(&mut self, resolver: &mut Resolver<'a, 'b>) -> ResolveResult<Self::Output> {
+        match self {
+            hir::SuffixKind::Call(args) => {
+                for arg in args.iter_mut() {
+                    arg.resolve(resolver)?;
+                }
+                Ok(())
+            }
+        }
+    }
+}
+
+impl<'a, 'b> ResolveMut<'a, 'b> for hir::Suffixed<'b> {
     type Output = ();
 
     fn resolve(&mut self, resolver: &mut Resolver<'a, 'b>) -> ResolveResult<Self::Output> {
         self.base.resolve(resolver)?;
-        for arg in self.arguments.iter_mut() {
-            arg.resolve(resolver)?;
-        }
-        Ok(())
+        self.kind.resolve(resolver)
     }
 }
+
+// impl<'a, 'b> ResolveMut<'a, 'b> for hir::Call<'b> {
+//     type Output = ();
+
+//     fn resolve(&mut self, resolver: &mut Resolver<'a, 'b>) -> ResolveResult<Self::Output> {
+//         self.base.resolve(resolver)?;
+//         for arg in self.arguments.iter_mut() {
+//             arg.resolve(resolver)?;
+//         }
+//         Ok(())
+//     }
+// }
 
 impl<'a, 'b> ResolveMut<'a, 'b> for hir::LibraryExpr<'b> {
     type Output = ();
@@ -75,7 +99,7 @@ impl<'a, 'b> ResolveMut<'a, 'b> for hir::Expr<'b> {
 
     fn resolve(&mut self, resolver: &mut Resolver<'a, 'b>) -> ResolveResult<Self::Output> {
         match self {
-            hir::Expr::Call(node) => node.resolve(resolver),
+            hir::Expr::Suffixed(node) => node.resolve(resolver),
             hir::Expr::Function(node) => node.resolve(resolver),
             hir::Expr::Library(node) => node.resolve(resolver),
             hir::Expr::Literal(node) => node.resolve(resolver),

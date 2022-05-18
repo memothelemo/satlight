@@ -66,6 +66,11 @@ impl std::fmt::Debug for Config {
 }
 
 impl Config {
+    /// Makes a default no file Config object
+    pub fn default() -> Self {
+        Self::no_file(ConfigInfo::default())
+    }
+
     /// Creates a new Config object
     pub fn new(info: ConfigInfo, path: PathBuf) -> Self {
         Config {

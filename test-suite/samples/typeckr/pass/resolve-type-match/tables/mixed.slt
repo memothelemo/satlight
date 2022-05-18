@@ -1,0 +1,7 @@
+type A = {
+	[string]: number,
+}
+local hi: A = {
+	["yes"] = 1,
+	["a"] = 2,
+}

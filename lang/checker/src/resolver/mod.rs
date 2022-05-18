@@ -226,7 +226,7 @@ impl<'a, 'b> Resolver<'a, 'b> {
                 typ.parameters.as_ref().unwrap()
             }
             _ => {
-                eprintln!("Invalid type reference symbol! {:#?}", symbol);
+                //eprintln!("Invalid type reference symbol! {:#?}", symbol);
                 self.type_stack.pop();
                 return Ok(types::makers::any(typ.span()));
             }

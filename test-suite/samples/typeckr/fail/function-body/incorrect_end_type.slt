@@ -1,0 +1,3 @@
+local b = function() -> number
+	return "Hi"
+end

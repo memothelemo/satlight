@@ -1,0 +1,8 @@
+type A = {
+	[string]: number,
+	foo: string,
+}
+local sample: A = {
+	foo = "bar",
+	cool = 1,
+}
