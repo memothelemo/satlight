@@ -14,9 +14,10 @@ name = "salite"
 path = "src/cli/main.rs"
 
 [dependencies]
+ansi_term = "0.12.1"
 anyhow = "1.0.57"
 chashmap = "2.2.2"
-clap = "3.1.18"
+clap = { version = "3.1.18", features = ["derive"] }
 crossbeam = "0.8.1"
 id-arena = "2.2.1"
 lazy_static = "1.4.0"

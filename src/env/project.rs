@@ -20,7 +20,7 @@ pub enum ProjectError {
     Config(ConfigError),
 
     /// This error caused by a directory has no config file
-    #[error("A directory has a no config file 'sltcfg.json'")]
+    #[error("This directory has a no config file 'sltcfg.json'")]
     DirectoryNoConfig,
 
     /// This error caused by a config file doesn't have a parent to begin with.
