@@ -50,6 +50,7 @@ pub struct TypeDeclaration<'a> {
     pub name: String,
     pub parameters: Option<Vec<TypeParameter>>,
     pub value: Type,
+    pub symbol: Id<Symbol>,
     pub node_id: Id<&'a dyn Node>,
 }
 

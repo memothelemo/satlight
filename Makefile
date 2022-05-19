@@ -1,15 +1,23 @@
-CARGO_MANIFESTS=./Cargo.toml $(wildcard ./lang/**/Cargo.toml)
-TEST_PROV=cargo test
-TEST_PROV_ARGS=--manifest-path
+DEFAULT_FEATURES = --features no-out
+TEST_SUITE_MANIFEST = --manifest-path ./test-suite/Cargo.toml
+
+default:
+all:
 
 test:
-	cargo run --manifest-path ./test-suite/Cargo.toml
+	cargo run $(TEST_SUITE_MANIFEST)
 
-test-parser:
-	cargo run --manifest-path ./test-suite/Cargo.toml -- parser
+test-no-out:
+	cargo run $(DEFAULT_FEATURES) $(TEST_SUITE_MANIFEST)
 
-test-checker:
-	cargo run --manifest-path ./test-suite/Cargo.toml -- typechecker
+parse-test:
+	cargo run $(DEFAULT_FEATURES) $(TEST_SUITE_MANIFEST) -- parser
+
+typ-test:
+	cargo run $(DEFAULT_FEATURES) $(TEST_SUITE_MANIFEST) -- typechecker
+
+typ-debug:
+	cargo run $(TEST_SUITE_MANIFEST) $(DEFAULT_FEATURES) --features debug -- typechecker
 
 # test:
 # 	echo Testing all crates

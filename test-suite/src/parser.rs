@@ -73,20 +73,23 @@ impl TestCase for ParserCase {
                                 input
                             );
 
-                            let output_path = Path::new(file).with_extension("result");
-                            let output = serde_json::to_string_pretty(&result).unwrap();
+                            #[cfg(not(feature = "no-out"))]
+                            {
+                                let output_path = Path::new(file).with_extension("result");
+                                let output = serde_json::to_string_pretty(&result).unwrap();
 
-                            use std::{fs::File, io::Write};
-                            File::create(output_path.clone())
-                                .map(|mut v| v.write_all(output.as_bytes()))
-                                .unwrap_or_else(|e| {
-                                    panic!(
-                                        "Failed to create output file {}: {}",
-                                        output_path.to_string_lossy(),
-                                        e
-                                    )
-                                })
-                                .unwrap();
+                                use std::{fs::File, io::Write};
+                                File::create(output_path.clone())
+                                    .map(|mut v| v.write_all(output.as_bytes()))
+                                    .unwrap_or_else(|e| {
+                                        panic!(
+                                            "Failed to create output file {}: {}",
+                                            output_path.to_string_lossy(),
+                                            e
+                                        )
+                                    })
+                                    .unwrap();
+                            }
 
                             Ok(result)
                         })();
@@ -108,22 +111,28 @@ impl TestCase for ParserCase {
                         let result: Result<(), String> = (|| {
                             let (tokens, ..) = self.tokenize(file)?;
                             let state = salite::parser::ParseState::new(&tokens);
-                            let err = result_mattering!(fail = salite::parser::$name.parse(&state));
+                            #[cfg(feature = "no-out")]
+                            result_mattering!(fail = salite::parser::$name.parse(&state));
 
-                            let output_path = Path::new(file).with_extension("result");
-                            let output = serde_json::to_string_pretty(&err).unwrap();
+                            #[cfg(not(feature = "no-out"))]
+                            {
+                                let err =
+                                    result_mattering!(fail = salite::parser::$name.parse(&state));
+                                let output_path = Path::new(file).with_extension("result");
+                                let output = serde_json::to_string_pretty(&err).unwrap();
 
-                            use std::{fs::File, io::Write};
-                            File::create(output_path.clone())
-                                .map(|mut v| v.write_all(output.as_bytes()))
-                                .unwrap_or_else(|e| {
-                                    panic!(
-                                        "Failed to create output file {}: {}",
-                                        output_path.to_string_lossy(),
-                                        e
-                                    )
-                                })
-                                .unwrap();
+                                use std::{fs::File, io::Write};
+                                File::create(output_path.clone())
+                                    .map(|mut v| v.write_all(output.as_bytes()))
+                                    .unwrap_or_else(|e| {
+                                        panic!(
+                                            "Failed to create output file {}: {}",
+                                            output_path.to_string_lossy(),
+                                            e
+                                        )
+                                    })
+                                    .unwrap();
+                            }
 
                             Ok(())
                         })();

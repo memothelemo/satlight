@@ -1,9 +1,12 @@
+#![feature(result_option_inspect)]
 #![feature(ptr_const_cast)]
+
 use std::env;
 
 use anyhow::{Context, Result};
 use log::SetLoggerError;
 use salite::{
+    ast::Position,
     checker::{Analyzer, EnvContext, Resolver},
     common::memory::SafePtr,
 };
@@ -47,19 +50,32 @@ fn compile() -> Result<()> {
     let env_ptr = SafePtr::from_ptr(&mut env as *mut EnvContext);
 
     let now = std::time::Instant::now();
+    #[allow(unused_must_use)]
     for (file_path, module) in env.modules_mut().iter_mut() {
-        Resolver::from_result(module, env_ptr.clone())
-            .with_context(|| format!("Failed to check file: {}", file_path.to_string_lossy()))?;
+        Resolver::from_result(module, env_ptr.clone()).inspect_err(|e| {
+            println!(
+                "{}:{}: {}",
+                file_path.to_string_lossy(),
+                Position::from_offset(e.span().start, &project.get_source_code(file_path).unwrap()),
+                e
+            );
+        });
     }
 
     let elapsed = now.elapsed();
     log::info!("Took to resolve entire project source: {:.2?}", elapsed);
 
     let now = std::time::Instant::now();
+    #[allow(unused_must_use)]
     for (file_path, module) in env.modules().iter() {
-        Analyzer::analyze(module.ctx.clone(), &module.file).with_context(|| {
-            format!("Failed to typecheck file: {}", file_path.to_string_lossy())
-        })?;
+        Analyzer::analyze(module.ctx.clone(), &module.file).inspect_err(|e| {
+            println!(
+                "{}:{}: {}",
+                file_path.to_string_lossy(),
+                Position::from_offset(e.span().start, &project.get_source_code(file_path).unwrap()),
+                e
+            );
+        });
     }
     let elapsed = now.elapsed();
 

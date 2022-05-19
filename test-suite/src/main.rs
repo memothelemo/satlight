@@ -130,25 +130,40 @@ impl TestEnv {
 
         use ansi_term::Color::*;
         self.total_tests += 1;
-        match callback() {
+
+        let now = std::time::Instant::now();
+        let result = callback();
+        let elapsed = now.elapsed();
+
+        #[cfg(feature = "debug")]
+        eprintln!(
+            "{0} {1} {0}",
+            Style::new().bold().fg(Yellow).paint("^^^^^^^^^^"),
+            text
+        );
+
+        match result {
             Ok(..) => {
+                #[cfg(not(feature = "debug"))]
                 eprintln!(
-                    "{}[{}] {}",
+                    "{}[{}] {} ({:.2?})",
                     self.make_indentation_str(),
                     Style::new().bold().fg(Green).paint("/"),
-                    text
+                    text,
+                    elapsed
                 );
             }
             Err(err) => {
                 self.failed_tests += 1;
                 eprintln!(
-                    "{}[{}] {}",
+                    "{}[{}] {} ({:.2?})\n",
                     self.make_indentation_str(),
                     Style::new().bold().fg(Red).paint("X"),
-                    text
+                    text,
+                    elapsed
                 );
                 eprintln!(
-                    "{}{}{}: {}",
+                    "{}{}{}: {}\n",
                     self.make_indentation_str(),
                     INDENT,
                     Style::new().bold().paint("Reason"),
@@ -178,6 +193,15 @@ macro_rules! tasks {
 
 fn main() {
     use ansi_term::Color::*;
+
+    #[cfg(feature = "no-out")]
+    eprintln!(
+        "{}",
+        Style::new()
+            .bold()
+            .fg(Yellow)
+            .paint("!! Running in no output mode !!")
+    );
 
     let mut filtered_tests = Vec::new();
     let mut args = args();

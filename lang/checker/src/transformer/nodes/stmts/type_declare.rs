@@ -31,6 +31,7 @@ impl<'a, 'b> Transform<'a, 'b> for ast::TypeDeclaration {
             &real_name,
             SymbolKind::TypeAlias(TypeAliasSymbol {
                 name: real_name.to_string(),
+                intrinsic: false,
                 typ: types::makers::any(self.name().span()),
                 parameters: parameters.clone(),
             }),
@@ -47,7 +48,7 @@ impl<'a, 'b> Transform<'a, 'b> for ast::TypeDeclaration {
                 tfmr.insert_type_alias(
                     &param.name,
                     SymbolKind::TypeParameter(
-						param.name.to_string(),
+                        param.name.to_string(),
                         param
                             .explicit
                             .clone()
@@ -72,6 +73,7 @@ impl<'a, 'b> Transform<'a, 'b> for ast::TypeDeclaration {
             name: real_name,
             parameters,
             value,
+            symbol: symbol_id,
             node_id: tfmr.ctx.nodes.alloc(self),
         })
     }

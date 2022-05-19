@@ -1,5 +1,3 @@
-use crate::types::Type;
-
 use super::*;
 use ast::SpannedNode;
 
@@ -77,13 +75,13 @@ impl<'a, 'b> Transform<'a, 'b> for ast::LocalAssign {
             );
 
             let explicit_type = name.type_info().as_ref().map(|v| v.transform(tfmr));
-            let (explicit_type, expr) = match (explicit_type, expr) {
-                (Some(Type::Function(assertion)), Some(Type::Function(expr))) => {
-                    let (v0, v1) = tfmr.revisit_function_type(expr, assertion);
-                    (Some(v0), Some(v1))
-                }
-                a => (a.0, a.1),
-            };
+            // let (explicit_type, expr) = match dbg!((explicit_type, expr)) {
+            //     (Some(Type::Function(assertion)), Some(Type::Function(expr))) => {
+            //         let (v0, v1) = tfmr.revisit_function_type(expr, assertion);
+            //         (Some(v0), Some(v1))
+            //     }
+            //     a => (a.0, a.1),
+            // };
 
             variables.push(hir::LocalAssignVar {
                 name: real_name,

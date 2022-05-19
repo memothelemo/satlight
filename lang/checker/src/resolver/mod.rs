@@ -53,6 +53,12 @@ impl<'a, 'b> Resolver<'a, 'b> {
     ) -> Result<type_variants::Table, ResolveError> {
         let mut entries = Dictionary::new();
         for (key, value) in node.entries.iter() {
+            let key = match key {
+                type_variants::TableFieldKey::Computed(ty, s) => {
+                    type_variants::TableFieldKey::Computed(self.resolve_type_inner(ty)?, *s)
+                }
+                _ => key.clone(),
+            };
             entries.insert(key.clone(), self.resolve_type_inner(value)?);
         }
         let mut metatable = None;
@@ -68,8 +74,22 @@ impl<'a, 'b> Resolver<'a, 'b> {
     }
 
     pub fn resolve_type(&mut self, typ: &types::Type) -> ResolveResult<Type> {
-        let res = self.resolve_type_inner(typ)?;
+        // grab the true type of recursive type once!
+        let typ = match typ {
+            Type::Recursive(info) => self
+                .ctx
+                .symbols
+                .get(info.symbol)
+                .unwrap()
+                .get_type()
+                .expect("expected type")
+                .clone(),
+            _ => typ.clone(),
+        };
+
+        let res = self.resolve_type_inner(&typ)?;
         self.type_stack.clear();
+
         Ok(res)
     }
 
@@ -209,24 +229,46 @@ impl<'a, 'b> Resolver<'a, 'b> {
     pub fn resolve_type_ref(&mut self, typ: &type_variants::Reference) -> ResolveResult<Type> {
         // type parameters...
         if let Some(typ) = self.type_vars.get(&typ.name) {
-            // TOOD(memothelemo): make sure it doesn't have parameters?
+            // TODO(memothelemo): make sure it doesn't have parameters?
             return Ok(typ.clone());
         }
 
-        // get the type parameters
-        let symbol = self.ctx.symbols.get(typ.symbol).unwrap();
-        self.type_stack.push(typ.symbol);
+        if self.type_stack.contains(&typ.symbol) {
+            return Ok(Type::Recursive(types::variants::Recursive {
+                span: typ.span,
+                symbol: typ.symbol,
+            }));
+        }
 
-        let parameters = match &symbol.kind {
-            crate::SymbolKind::TypeAlias(typ) => {
-                if typ.parameters.is_none() {
-                    self.type_stack.pop();
-                    return Ok(typ.typ.clone());
+        let mut self_ptr = SafePtr::from_ptr(self as *mut Resolver<'a, 'b>);
+
+        // get the type parameters
+        let symbol = self.ctx.symbols.get_mut(typ.symbol).unwrap();
+        let parameters = match &mut symbol.kind {
+            crate::SymbolKind::TypeAlias(sym_typ) => {
+                if self.type_stack.contains(&typ.symbol) {
+                    return Ok(Type::Recursive(types::variants::Recursive {
+                        span: typ.span,
+                        symbol: typ.symbol,
+                    }));
                 }
-                typ.parameters.as_ref().unwrap()
+                if !sym_typ.intrinsic {
+                    // TODO(memothelemo): odd behavior, i will check on that later why
+                    self.type_stack.push(typ.symbol);
+                    self_ptr.type_stack.push(typ.symbol);
+                }
+                if sym_typ.parameters.is_none() {
+                    self.type_stack.pop();
+                    return self_ptr.resolve_type_inner(&sym_typ.typ.clone());
+                }
+                sym_typ.parameters.as_mut().unwrap()
+            }
+            crate::SymbolKind::TypeParameter(.., a) => {
+                self.type_stack.pop();
+                return Ok(a.clone());
             }
             _ => {
-                //eprintln!("Invalid type reference symbol! {:#?}", symbol);
+                eprintln!("Invalid type reference symbol! {:#?}", symbol);
                 self.type_stack.pop();
                 return Ok(types::makers::any(typ.span()));
             }
@@ -240,30 +282,48 @@ impl<'a, 'b> Resolver<'a, 'b> {
             });
         }
 
-        let arguments = typ.arguments.as_ref().unwrap();
+        let raw_arguments = typ.arguments.as_ref().unwrap();
+        let mut argument_collection = Vec::new();
 
         #[allow(clippy::or_fun_call)]
-        for (idx, param) in parameters.iter().enumerate() {
-            let arg = arguments.get(idx).or(param.default.as_ref());
-            let explicit_param = param
-                .explicit
-                .clone()
-                .unwrap_or(types::makers::any(param.span));
+        for (idx, param) in parameters.iter_mut().enumerate() {
+            let arg = raw_arguments.get(idx).or(param.default.as_ref());
+            let explicit_param = &mut param.explicit;
 
             if let Some(arg) = arg {
-                self.type_vars.insert(param.name.clone(), arg.clone());
+                let arg = arg.clone();
+                argument_collection.push((param.name.clone(), arg, explicit_param));
             } else {
                 return Err(ResolveError::MissingTypeArgument {
                     span: typ.span(),
                     idx: idx + 1,
-                    expected_type: utils::type_description(&self.ctx, &explicit_param),
+                    expected_type: utils::type_description(
+                        self_ptr.ctx.as_ref(),
+                        &explicit_param
+                            .clone()
+                            .unwrap_or(types::makers::any(param.span)),
+                    ),
                 });
             }
         }
 
+        for (name, arg, explicit) in argument_collection {
+            let explicit_result = if let Some(explicit) = explicit.clone() {
+                Some(self_ptr.resolve_type_inner(&explicit)?)
+            } else {
+                None
+            };
+            *explicit = explicit_result;
+
+            let arg = self_ptr.resolve_type_inner(&arg)?;
+            self.type_vars.insert(name, arg);
+        }
+
         self.type_stack.pop();
 
+        let symbol = self.ctx.symbols.get(typ.symbol).unwrap();
         let typ = symbol.get_type().expect("Expected type").clone();
+
         self.resolve_type_inner(&typ)
     }
 }

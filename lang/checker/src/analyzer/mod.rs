@@ -3,8 +3,9 @@ use std::sync::Arc;
 use crate::{
     hir,
     types::{variants, Type, TypeTrait},
-    utils, ModuleContext,
+    utils, ModuleContext, Symbol,
 };
+use id_arena::Id;
 use salite_ast::Span;
 
 mod checker;
@@ -43,6 +44,7 @@ pub type AnalyzeResult<T = ()> = Result<T, AnalyzeError>;
 pub struct Analyzer<'a, 'b> {
     pub ctx: Arc<ModuleContext<'a, 'b>>,
     pub expected_type: Option<Type>,
+    pub recursive_stack: Vec<Id<Symbol>>,
 }
 
 impl<'a, 'b> Analyzer<'a, 'b> {
@@ -50,6 +52,7 @@ impl<'a, 'b> Analyzer<'a, 'b> {
         let mut analyzer = Self {
             ctx,
             expected_type: None,
+            recursive_stack: Vec::new(),
         };
         file.block.validate(&mut analyzer)
     }

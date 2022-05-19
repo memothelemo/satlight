@@ -18,7 +18,16 @@ impl<'a, 'b> ResolveMut<'a, 'b> for hir::TypeDeclaration<'b> {
                 };
             }
         }
-        self.value = self.value.resolve(resolver)?;
+
+        let value = self.value.resolve(resolver)?;
+        let symbol = resolver.ctx.get_mut().symbols.get_mut(self.symbol).unwrap();
+
+        if let crate::SymbolKind::TypeAlias(info) = &mut symbol.kind {
+            info.intrinsic = matches!(value, Type::Literal(..));
+            info.typ = value.clone();
+        }
+
+        self.value = value;
         Ok(())
     }
 }

@@ -33,7 +33,7 @@ jobs:
           args: ${{ matrix.features }}
 
       - name: Test
-        run: make test
+        run: make test-no-out
 
       - name: Test all benches
         if: matrix.benches

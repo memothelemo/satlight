@@ -123,6 +123,9 @@ impl TestCase for TypeckCase {
             run_scripts_folder(self.fail_path(env), &mut |file, buf| {
                 let result = match self.evaluate_script(file) {
                     Ok(..) => Err("Expected fail".to_string()),
+                    #[cfg(feature = "no-out")]
+                    Err(..) => Ok(()),
+                    #[cfg(not(feature = "no-out"))]
                     Err(err) => {
                         let output_path = Path::new(file).with_extension("error");
                         std::fs::write(output_path, err).expect("failed to write");

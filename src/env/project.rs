@@ -170,7 +170,7 @@ impl Project {
             .filter(|v| {
                 let mut res = true;
                 for (file_path, ..) in current_files.iter() {
-                    if !file_path.eq(v) {
+                    if file_path.eq(v) {
                         res = false;
                         break;
                     }

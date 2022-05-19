@@ -61,3 +61,24 @@ pub enum ResolveError {
     #[error("{base} has no parameters")]
     TypeHasNoParameters { span: Span, base: String },
 }
+
+impl ResolveError {
+    pub fn span(&self) -> Span {
+        match self {
+            ResolveError::RecursiveType { span, .. } => *span,
+            ResolveError::InvalidLibraryUse { span, .. } => *span,
+            ResolveError::ExcessiveVarargParam { span } => *span,
+            ResolveError::ExcessiveParameter { span, .. } => *span,
+            ResolveError::ExcessiveField { span, .. } => *span,
+            ResolveError::InvalidField { span, .. } => *span,
+            ResolveError::InvalidMetatable { span } => *span,
+            ResolveError::InvalidMetamethod { span, .. } => *span,
+            ResolveError::NotDefined { span, .. } => *span,
+            ResolveError::InvalidType { span, .. } => *span,
+            ResolveError::NoArguments { span, .. } => *span,
+            ResolveError::MissingTypeArgument { span, .. } => *span,
+            ResolveError::MissingArgument { span, .. } => *span,
+            ResolveError::TypeHasNoParameters { span, .. } => *span,
+        }
+    }
+}

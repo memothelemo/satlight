@@ -1,3 +1,5 @@
+use std::borrow::Borrow;
+
 use super::*;
 
 mod function;
@@ -75,14 +77,36 @@ impl<'a, 'b> Transform<'a, 'b> for ast::Literal {
                             (hir::TableFieldKey::None, expr)
                         }
                         ast::TableField::Expr { index, value, .. } => {
+                            let real_name = match index.borrow() {
+                                ast::Expr::Literal(ast::Literal::Str(str)) => {
+                                    Some(match str.ty() {
+                                        ast::TokenType::Str(contents) => contents.to_string(),
+                                        _ => unreachable!(),
+                                    })
+                                }
+                                _ => None,
+                            };
+
                             let index = index.transform(tfmr);
                             let index_span = index.span();
                             let value = value.transform(tfmr);
-                            entries.insert(
-                                variants::TableFieldKey::Computed(index.typ().clone(), index_span),
-                                value.typ().clone(),
-                            );
-                            (hir::TableFieldKey::Computed(index), value)
+
+                            if let Some(name) = real_name {
+                                entries.insert(
+                                    variants::TableFieldKey::Name(name.to_string(), index_span),
+                                    value.typ().clone(),
+                                );
+                                (hir::TableFieldKey::Name(name, index_span), value)
+                            } else {
+                                entries.insert(
+                                    variants::TableFieldKey::Computed(
+                                        index.typ().clone(),
+                                        index_span,
+                                    ),
+                                    value.typ().clone(),
+                                );
+                                (hir::TableFieldKey::Computed(index), value)
+                            }
                         }
                         ast::TableField::Named { name, value, .. } => {
                             let value = value.transform(tfmr);

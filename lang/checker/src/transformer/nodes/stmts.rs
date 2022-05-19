@@ -97,7 +97,7 @@ impl<'a, 'b> Transform<'a, 'b> for ast::Block {
                 .actual_type
                 .clone()
                 .unwrap_or(types::makers::void(self.span())),
-            expected_type: None,
+            expected_type: tfmr.current_scope().expected_type.clone(),
         }
     }
 }

@@ -3,9 +3,12 @@ name = "test-suite"
 version = "0.1.0"
 edition = "2021"
 
+[features]
+debug = []
+no-out = []
+
 [dependencies]
 ansi_term = "0.12.1"
-pathdiff = "0.2.1"
 salite = { path = ".." }
 salite_ast = { path = "../lang/ast", features = ["serde"] }
 salite_common = { path = "../lang/common", features = ["serde"] }

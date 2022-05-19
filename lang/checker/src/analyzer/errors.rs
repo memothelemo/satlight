@@ -75,3 +75,26 @@ pub enum AnalyzeError {
     #[error("{base} has no parameters")]
     TypeHasNoParameters { span: Span, base: String },
 }
+
+impl AnalyzeError {
+    pub fn span(&self) -> Span {
+        match self {
+            AnalyzeError::InvalidLibraryUse { span, .. } => *span,
+            AnalyzeError::NonCallExpression { span } => *span,
+            AnalyzeError::ExcessiveVarargParam { span } => *span,
+            AnalyzeError::ExcessiveParameter { span, .. } => *span,
+            AnalyzeError::ExcessiveField { span, .. } => *span,
+            AnalyzeError::InvalidField { span, .. } => *span,
+            AnalyzeError::MissingField { span, .. } => *span,
+            AnalyzeError::InvalidMetatable { span } => *span,
+            AnalyzeError::InvalidMetamethod { span, .. } => *span,
+            AnalyzeError::NotDefined { span, .. } => *span,
+            AnalyzeError::NotExtendable { span, .. } => *span,
+            AnalyzeError::InvalidType { span, .. } => *span,
+            AnalyzeError::NoArguments { span, .. } => *span,
+            AnalyzeError::MissingTypeArgument { span, .. } => *span,
+            AnalyzeError::MissingArgument { span, .. } => *span,
+            AnalyzeError::TypeHasNoParameters { span, .. } => *span,
+        }
+    }
+}

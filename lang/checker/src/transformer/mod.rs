@@ -46,6 +46,7 @@ impl<'a, 'b> Transformer<'a, 'b> {
 				$( self.insert_type_alias($name, SymbolKind::TypeAlias(TypeAliasSymbol {
 					name: $name.to_string(),
 					typ: $typ,
+                    intrinsic: true,
 					parameters: None,
 				}), None); )*
 			};
@@ -149,26 +150,6 @@ impl<'a, 'b> Transformer<'a, 'b> {
 }
 
 impl<'a, 'b> Transformer<'a, 'b> {
-    pub(crate) fn revisit_function_type(
-        &mut self,
-        mut base: types::variants::Function,
-        assertion: types::variants::Function,
-    ) -> (types::Type, types::Type) {
-        for (idx, base_param) in base.parameters.iter_mut().enumerate() {
-            if let Some(assertion_param) = assertion.parameters.get(idx) {
-                if matches!(base_param.typ, types::Type::Any(..)) {
-                    // overiding the parameter guess enough?
-                    base_param.typ = assertion_param.typ.clone();
-                    *base_param.typ.span_mut() = base_param.span;
-                }
-            }
-        }
-        (
-            types::Type::Function(base),
-            types::Type::Function(assertion),
-        )
-    }
-
     pub(crate) fn register_symbol(
         &mut self,
         definitions: Vec<Span>,

@@ -1,0 +1,8 @@
+type Thing = {
+    lol: (self: Thing) -> void,
+}
+
+local Thing: Thing = {
+    lol = function(self: Thing) -> void
+    end,
+}

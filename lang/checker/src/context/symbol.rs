@@ -5,6 +5,7 @@ use salite_ast::Span;
 pub struct TypeAliasSymbol {
     pub name: String,
     pub typ: Type,
+    pub intrinsic: bool,
     pub parameters: Option<Vec<TypeParameter>>,
 }
 
