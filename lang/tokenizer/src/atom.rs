@@ -257,7 +257,7 @@ pub enum Atom {
     #[regex(r"\[(=*)\[", |l| deal_lua_brackets(l, 0))]
     BracketString,
 
-    #[regex(r"\"", |x| read_string(x, '"'))]
+    #[regex(r""", |x| read_string(x, '"'))]
     QuoteString,
 
     #[regex(r"'", |x| read_string(x, '\''))]
