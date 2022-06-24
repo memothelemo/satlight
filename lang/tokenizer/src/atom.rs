@@ -41,6 +41,19 @@ fn deal_lua_brackets(lexer: &mut Lexer<Atom>, skips: usize) -> bool {
     false
 }
 
+fn read_string(lex: &mut Lexer<Atom>, quote: char) -> bool {
+    let mut escape = false;
+    for char in lex.remainder().chars() {
+        if !escape && char == quote {
+            lex.bump(1);
+            return true;
+        }
+        escape = char == '\\';
+        lex.bump(char.len_utf8());
+    }
+    false
+}
+
 fn parse_comment(lexer: &mut Lexer<Atom>) -> bool {
     if lexer
         .slice()
@@ -244,10 +257,10 @@ pub enum Atom {
     #[regex(r"\[(=*)\[", |l| deal_lua_brackets(l, 0))]
     BracketString,
 
-    #[regex(r#""((\\")|[^"])*""#)]
+    #[regex(r"\"", |x| read_string(x, '"'))]
     QuoteString,
 
-    #[regex(r#"'((\\')|[^'])*'"#)]
+    #[regex(r"'", |x| read_string(x, '\''))]
     ApostropheString,
 
     #[error]
